@@ -136,7 +136,7 @@
     /* Modals */
     .mbg{position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
     .mbg.open{opacity:1;pointer-events:all}
-    .modal{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;width:100%;max-width:560px;border:1px solid rgba(255,255,255,.5);box-shadow:0 28px 90px rgba(0,0,0,.2);transform:scale(.95) translateY(10px);transition:transform .22s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto}
+    .modal{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;width:100%;max-width:640px;border:1px solid rgba(255,255,255,.5);box-shadow:0 28px 90px rgba(0,0,0,.2);transform:scale(.95) translateY(10px);transition:transform .22s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto}
     .mbg.open .modal{transform:scale(1) translateY(0)}
     .mhd{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-radius:20px 20px 0 0;z-index:1}
     .mtitle{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:var(--navy)}
@@ -246,7 +246,7 @@
       <div class="fg"><label>Destino / Endereço</label><input id="eDestino" type="text" placeholder="Ex: Obra Ribeirão Preto"></div>
       <div class="fg"><label>Cliente</label><input id="eCliente" type="text" placeholder="Nome do cliente"></div>
     </div>
-    <div class="fg"><label>Máquina (se frete)</label><input id="eMaquina" type="text" placeholder="Ex: 450AJ - Série 300111"></div>
+    <div class="fg" id="fgMaquina"><label>Máquina (se frete)</label><select id="eMaquina"><option value="">Carregando máquinas...</option></select></div>
     <div class="frow">
       <div class="fg"><label>Prioridade</label><select id="ePrioridade"><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
       <div class="fg"><label>Status</label><select id="eStatus"><option value="agendado">Agendado</option><option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option></select></div>
@@ -447,11 +447,34 @@ function render(){
 }
 
 // ── Populate selects ──
+let maquinasList=[];
 function populateSelects(){
+  // Veiculos - sanitize placa (Sheets pode converter pra Date)
   const vs=document.getElementById('eVeiculo');
-  vs.innerHTML='<option value="">Selecione...</option>'+V.map(v=>'<option value="'+esc(v.id)+'" data-name="'+esc(v.apelido||v.modelo||v.placa)+'">'+esc((v.apelido||v.modelo||'')+' ('+v.placa+')')+'</option>').join('');
+  vs.innerHTML='<option value="">Selecione...</option>'+V.map(v=>{
+    const placa=(v.placa||'').length<15?v.placa:'';
+    const label=esc((v.apelido||v.modelo||v.tipo)+(placa?' ('+placa+')':''));
+    const name=esc(v.apelido||v.modelo||v.tipo);
+    return '<option value="'+esc(v.id)+'" data-name="'+name+'">'+label+'</option>';
+  }).join('');
+  // Operadores
   const os=document.getElementById('eOperador');
   os.innerHTML='<option value="">Selecione...</option>'+O.filter(o=>o.status==='ativo').map(o=>'<option value="'+esc(o.id)+'" data-name="'+esc(o.nome)+'">'+esc(o.nome)+'</option>').join('');
+  // Máquinas do painel de plataformas
+  populateMaquinas();
+}
+function populateMaquinas(){
+  const sel=document.getElementById('eMaquina');
+  if(maquinasList.length){
+    sel.innerHTML='<option value="">Selecione a máquina...</option>'+maquinasList.map(m=>'<option value="'+esc(m.modelo+(m.numero_serie?' - '+m.numero_serie:''))+'">'+esc(m.modelo+(m.numero_serie?' ('+m.numero_serie+')':'')+(m.cliente_atual?' — '+m.cliente_atual:''))+'</option>').join('');
+    return;
+  }
+  // Fetch from plataformas API
+  api({action:'getAll'}).then(r=>{
+    const data=Array.isArray(r)?r:Array.isArray(r?.data)?r.data:[];
+    maquinasList=data;
+    sel.innerHTML='<option value="">Selecione a máquina...</option>'+data.map(m=>'<option value="'+esc((m.modelo||'')+(m.numero_serie?' - '+m.numero_serie:''))+'">'+esc((m.modelo||'')+(m.numero_serie?' ('+m.numero_serie+')':'')+(m.cliente_atual?' — '+m.cliente_atual:''))+'</option>').join('');
+  }).catch(()=>{});
 }
 
 // ── CRUD: Escala ──
@@ -554,6 +577,10 @@ document.getElementById('btnAdd').addEventListener('click',openAddEsc);
 document.getElementById('btnAddV').addEventListener('click',openAddVeic);
 document.getElementById('btnAddO').addEventListener('click',openAddOper);
 document.getElementById('eSave').addEventListener('click',saveEsc);
+document.getElementById('eServico').addEventListener('change',()=>{
+  const isFrete=document.getElementById('eServico').value==='Frete de máquina';
+  document.getElementById('fgMaquina').style.display=isFrete?'flex':'none';
+});
 document.getElementById('vSave').addEventListener('click',saveVeic);
 document.getElementById('oSave').addEventListener('click',saveOper);
 document.getElementById('prevDay').addEventListener('click',prevDay);

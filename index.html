@@ -535,10 +535,15 @@ function generateSnapshot(){
 // ── Load ──
 async function loadAll(){
   const cached=localStorage.getItem('mmc_frota');
-  if(cached){try{const c=JSON.parse(cached);V=c.V||[];O=c.O||[];E=c.E||[];render();populateSelects();if(Date.now()-c.ts<120000){bgSync();return}}catch{}}
+  if(cached){try{const c=JSON.parse(cached);V=c.V||[];O=c.O||[];E=c.E||[];render();populateSelects()}catch{}}
   setLoading(true);
-  try{const r=await api({action:'frota_getAllData',dateFrom:'',dateTo:''});if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=normEscala(r.escala);localSave();render();populateSelects()}
-  catch{if(!V.length&&!O.length)toast('Erro ao carregar. Verifique se o Apps Script foi atualizado.','err')}
+  try{
+    const r=await api({action:'frota_getAllData',dateFrom:'',dateTo:''});
+    if(r.veiculos)V=r.veiculos;
+    if(r.operadores)O=r.operadores;
+    if(r.escala)E=normEscala(r.escala);
+    localSave();render();populateSelects();
+  }catch{if(!V.length&&!O.length)toast('Erro ao carregar.','err')}
   finally{setLoading(false)}
 }
 

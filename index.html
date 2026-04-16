@@ -297,7 +297,7 @@
     <div class="fg" id="fgMaquina"><label>Máquina (se frete)</label><select id="eMaquina"><option value="">Carregando máquinas...</option></select></div>
     <div class="frow">
       <div class="fg"><label>Prioridade</label><select id="ePrioridade"><option value="normal">Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
-      <div class="fg"><label>Status</label><select id="eStatus"><option value="agendado">Agendado</option><option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option></select></div>
+      <div class="fg"><label>Status</label><select id="eStatus"><option value="agendado">Agendado</option><option value="em_rota">Em Rota</option><option value="em_execucao">Em Execução</option><option value="concluido">Concluído</option></select></div>
     </div>
     <div class="frow">
       <div class="fg"><label>Hora Saída</label><input id="eHoraSaida" type="time"></div>
@@ -436,7 +436,8 @@ function render(){
   if(!escHoje.length){sg.innerHTML='<div class="cempty">Nenhuma escala para '+fd(selDate)+'</div>'}
   else{sg.innerHTML=escHoje.map(e=>{
     const prior=e.prioridade||'normal';
-    const st=e.status||'agendado';
+    const stMap={em_andamento:'em_execucao',aberto:'agendado',deslocamento:'em_rota'};
+    const st=stMap[e.status]||e.status||'agendado';
     const stLabels={agendado:'Agendado',em_rota:'Em Rota',em_execucao:'Em Execução',concluido:'Concluído'};
     const stLabel=stLabels[st]||st;
     const isDone=st==='concluido';

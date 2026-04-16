@@ -89,8 +89,20 @@
     .sched-card.alta{border-left:4px solid var(--amber)}
     .sched-card.normal{border-left:4px solid var(--blue)}
     .sched-status{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .sched-status.aberto{background:var(--blue)}.sched-status.deslocamento{background:var(--amber)}
-    .sched-status.em_atendimento{background:var(--purple)}.sched-status.concluido{background:var(--green)}
+    .sched-status.agendado{background:var(--blue)}.sched-status.em_rota{background:var(--amber)}
+    .sched-status.em_execucao{background:var(--purple)}.sched-status.concluido{background:var(--green)}
+    .sched-status-label{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .sched-status-label.agendado{background:#dbeafe;color:#1e40af}
+    .sched-status-label.em_rota{background:#fef3c7;color:#92400e}
+    .sched-status-label.em_execucao{background:#ede9fe;color:#5b21b6}
+    .sched-status-label.concluido{background:#d1fae5;color:#065f46}
+    .sched-progress{padding:6px 14px;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
+    .sched-progress svg{width:14px;height:14px}
+    .sched-progress.next-rota{background:#fef3c7;color:#92400e}
+    .sched-progress.next-exec{background:#ede9fe;color:#5b21b6}
+    .sched-progress.next-done{background:#d1fae5;color:#065f46}
+    .sched-progress:hover{filter:brightness(.95);transform:scale(1.02)}
+    .sched-done{opacity:.6}
     .sched-body{flex:1;min-width:0}
     .sched-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:var(--navy)}
     .sched-meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:12px;flex-wrap:wrap}
@@ -389,10 +401,21 @@ function render(){
   else{sg.innerHTML=escHoje.map(e=>{
     const prior=e.prioridade||'normal';
     const st=e.status||'agendado';
-    return '<div class="sched-card '+prior+'">'
+    const stLabels={agendado:'Agendado',em_rota:'Em Rota',em_execucao:'Em Execução',concluido:'Concluído'};
+    const stLabel=stLabels[st]||st;
+    const isDone=st==='concluido';
+    // Next status button
+    let progressBtn='';
+    if(st==='agendado') progressBtn='<button class="sched-progress next-rota" onclick="advanceEsc(\''+esc(e.id)+'\',\'em_rota\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Em Rota</button>';
+    else if(st==='em_rota') progressBtn='<button class="sched-progress next-exec" onclick="advanceEsc(\''+esc(e.id)+'\',\'em_execucao\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Executando</button>';
+    else if(st==='em_execucao') progressBtn='<button class="sched-progress next-done" onclick="advanceEsc(\''+esc(e.id)+'\',\'concluido\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Concluir</button>';
+    return '<div class="sched-card '+prior+(isDone?' sched-done':'')+'">'
       +'<div class="sched-status '+st+'"></div>'
       +'<div class="sched-body">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       +'<div class="sched-title">'+esc(e.veiculo_nome||'Veículo')+' → '+esc(e.destino||'—')+'</div>'
+      +'<span class="sched-status-label '+st+'">'+esc(stLabel)+'</span>'
+      +'</div>'
       +'<div class="sched-meta">'
       +'<span>👤 <b>'+esc(e.operador_nome||'—')+'</b></span>'
       +'<span>🔧 '+esc(e.servico||'—')+'</span>'
@@ -402,7 +425,8 @@ function render(){
       +'</div>'
       +(e.observacoes?'<div style="font-size:11px;color:var(--muted);margin-top:4px">'+esc(e.observacoes)+'</div>':'')
       +'</div>'
-      +'<div class="sched-actions">'
+      +'<div class="sched-actions" style="display:flex;gap:6px;align-items:center">'
+      +progressBtn
       +'<button class="sb sb-e" onclick="editEsc(\''+esc(e.id)+'\')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
       +'<button class="sb sb-d" onclick="delEsc(\''+esc(e.id)+'\')" title="Remover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
       +'</div></div>';
@@ -488,6 +512,17 @@ async function saveEsc(){
   const eid=editEscId;closeModal('mEscala');
   const idx=E.findIndex(x=>x.id===d.id);if(idx>=0)E[idx]=d;else E.push(d);localSave();render();toast(eid?'Escala atualizada!':'Escala criada!');
   try{await api({action:eid?'frota_updEscala':'frota_addEscala',item:d});bgSync()}catch{toast('Erro ao salvar.','err')}
+}
+async function advanceEsc(id,newStatus){
+  const e=E.find(x=>x.id===id);if(!e)return;
+  const labels={em_rota:'Em Rota',em_execucao:'Em Execução',concluido:'Concluído'};
+  e.status=newStatus;
+  // Auto-fill hora_saida when going to em_rota
+  if(newStatus==='em_rota'&&!e.hora_saida){const now=new Date();e.hora_saida=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')}
+  // Auto-fill hora_retorno when concluding
+  if(newStatus==='concluido'&&!e.hora_retorno){const now=new Date();e.hora_retorno=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')}
+  localSave();render();toast((e.veiculo_nome||'Escala')+' → '+(labels[newStatus]||newStatus));
+  try{await api({action:'frota_updEscala',item:e});bgSync()}catch{toast('Erro.','err')}
 }
 async function delEsc(id){if(!confirm('Remover esta escala?'))return;E=E.filter(x=>x.id!==id);localSave();render();toast('Escala removida.');try{await api({action:'frota_delEscala',id});bgSync()}catch{toast('Erro.','err')}}
 

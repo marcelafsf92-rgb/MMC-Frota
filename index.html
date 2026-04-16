@@ -41,7 +41,8 @@
     /* Header */
     .hdr{background:var(--glass-dark);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);height:74px;padding:0 28px;display:flex;align-items:center;box-shadow:0 1px 0 rgba(255,255,255,.08),0 4px 20px rgba(0,0,0,.25);position:sticky;top:0;z-index:200;border-bottom:2px solid var(--gold)}
     .hdr-in{width:100%;max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .hdr-brand{display:flex;align-items:center;gap:14px}
+    .hdr-brand{display:flex;align-items:center;gap:10px}
+    .hdr-logo{height:48px;object-fit:contain;margin:-4px 0}
     .hdr-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;color:#fff;letter-spacing:.5px}
     .hdr-title span{color:var(--gold)}
     .hdr-sub{font-size:11px;color:rgba(255,255,255,.5)}
@@ -196,12 +197,33 @@
     /* Responsive */
     @media(max-width:700px){.vo-grid{grid-template-columns:1fr}.frow{grid-template-columns:1fr}.dash{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:640px){
-      .hdr{padding:0 12px;height:60px}.hdr-title{font-size:18px}.hdr-sub{display:none}.hbtn{padding:5px 10px;font-size:11px}
-      .tabs{padding:0 8px}.tbtn{padding:10px 10px;font-size:12px}.tc{min-width:18px;height:18px;font-size:10px;margin-left:4px}
-      .bwrap{padding:14px 12px}.dash{padding:10px 12px 0;gap:8px}.dash-card{padding:10px 12px}.dash-val{font-size:20px}
-      .sched-card{padding:12px;flex-wrap:wrap}.vo-card{padding:12px}
-      .modal{max-width:100%;border-radius:14px;margin:10px}
-      #toast{right:12px;left:12px;max-width:none;bottom:16px;font-size:13px}
+      .hdr{padding:0 10px;height:56px}.hdr-title{font-size:16px}.hdr-sub{display:none}
+      .hdr-logo{height:36px}
+      .hbtn{padding:4px 8px;font-size:11px}
+      .btn-gold{padding:6px 10px;font-size:12px}.btn-gold svg{width:14px;height:14px}
+      .tabs{padding:0 6px}.tbtn{padding:10px 8px;font-size:11px;letter-spacing:0}
+      .tc{min-width:18px;height:18px;font-size:10px;margin-left:3px;padding:0 4px}
+      .bwrap{padding:12px 10px}.dash{padding:10px 10px 0;gap:6px}
+      .dash-card{padding:10px}.dash-val{font-size:18px}.dash-icon{width:34px;height:34px}
+      .dash-icon svg{width:16px;height:16px}.dash-lbl{font-size:10px}
+      .sched-card{padding:12px;flex-wrap:wrap;gap:10px}
+      .sched-title{font-size:14px}.sched-meta{font-size:11px}
+      .sched-actions{width:100%;justify-content:flex-end;margin-top:4px}
+      .sched-progress{font-size:12px;padding:6px 10px}
+      .vo-card{padding:12px}.vo-name{font-size:16px}
+      .date-nav{gap:8px}.date-label{font-size:16px}
+      /* MODAL MOBILE FIX */
+      .mbg{padding:0;align-items:flex-end}
+      .modal{max-width:100%;border-radius:18px 18px 0 0;margin:0;max-height:92vh;
+        transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.23,1)}
+      .mbg.open .modal{transform:translateY(0)}
+      .mhd{padding:16px 18px 0;border-radius:18px 18px 0 0}
+      .mbd{padding:14px 18px;gap:12px}
+      .mft{padding:0 18px 20px}
+      .frow{grid-template-columns:1fr}
+      .fg label{font-size:11px}
+      .fg input,.fg select,.fg textarea{font-size:15px;padding:10px 12px}
+      #toast{right:10px;left:10px;max-width:none;bottom:12px;font-size:13px}
     }
   </style>
 </head>
@@ -212,7 +234,7 @@
 
 <header class="hdr"><div class="hdr-in">
   <div class="hdr-brand">
-    <img src="logo-header.png" alt="MMC Frota" style="height:52px;object-fit:contain;margin:-4px 0">
+    <img src="logo-header.png" alt="MMC Frota" class="hdr-logo">
     <div><div class="hdr-title" style="color:#fff">Controle de Frota</div><div class="hdr-sub">Escala & Veículos</div></div>
   </div>
   <div class="hdr-actions">

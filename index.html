@@ -313,6 +313,22 @@ let isEditor=sessionStorage.getItem('mmc_frota_editor')==='true';
 // ── Utils ──
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function normDate(v){
+  if(!v)return'';const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  try{const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}catch{}
+  return'';
+}
+function normTime(v){
+  if(!v)return'';const s=String(v).trim();
+  if(/^\d{2}:\d{2}$/.test(s))return s;
+  const m=s.match(/(\d{1,2}):(\d{2}):\d{2}/);if(m)return m[1].padStart(2,'0')+':'+m[2];
+  const m2=s.match(/(\d{1,2}):(\d{2})/);if(m2)return m2[1].padStart(2,'0')+':'+m2[2];
+  return'';
+}
+function normEscala(list){
+  return list.map(e=>({...e,data:normDate(e.data),hora_saida:normTime(e.hora_saida),hora_retorno:normTime(e.hora_retorno)}));
+}
 function fd(s){if(!s)return'';if(/^\d{4}-\d{2}-\d{2}$/.test(s)){const p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]}return s}
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function dayLabel(s){if(!s)return'';const d=new Date(s+'T12:00:00');const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];return dias[d.getDay()]+', '+fd(s)}
@@ -337,8 +353,8 @@ async function api(body){
 function localSave(){localStorage.setItem('mmc_frota',JSON.stringify({V,O,E,ts:Date.now()}))}
 function bgSync(){
   api({action:'frota_getAllData',dateFrom:'',dateTo:''}).then(r=>{
-    if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=r.escala;
-    localSave();render();
+    if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=normEscala(r.escala);
+    localSave();render();populateSelects();
   }).catch(()=>{});
 }
 
@@ -521,7 +537,7 @@ async function loadAll(){
   const cached=localStorage.getItem('mmc_frota');
   if(cached){try{const c=JSON.parse(cached);V=c.V||[];O=c.O||[];E=c.E||[];render();populateSelects();if(Date.now()-c.ts<120000){bgSync();return}}catch{}}
   setLoading(true);
-  try{const r=await api({action:'frota_getAllData',dateFrom:'',dateTo:''});if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=r.escala;localSave();render();populateSelects()}
+  try{const r=await api({action:'frota_getAllData',dateFrom:'',dateTo:''});if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=normEscala(r.escala);localSave();render();populateSelects()}
   catch{if(!V.length&&!O.length)toast('Erro ao carregar. Verifique se o Apps Script foi atualizado.','err')}
   finally{setLoading(false)}
 }

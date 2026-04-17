@@ -770,6 +770,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
 // ── Init ──
+if(new URLSearchParams(window.location.search).get('auth')===EDIT_PASS){isEditor=true;sessionStorage.setItem('mmc_frota_editor','true')}
 applyMode();
 setDate(today());
 loadAll();

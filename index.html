@@ -336,7 +336,7 @@
   <div class="mhd"><span class="mtitle" id="mVeicTitle">Novo Veículo</span><button class="mx" onclick="closeModal('mVeiculo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="mbd">
     <div class="frow">
-      <div class="fg"><label>Tipo</label><select id="vTipo"><option value="Prancha">Prancha</option><option value="Munck">Munck</option><option value="Guindaste">Guindaste</option><option value="Baú">Baú</option><option value="Carroceria">Carroceria</option><option value="Outro">Outro</option></select></div>
+      <div class="fg"><label>Tipo</label><select id="vTipo"><option value="Prancha">Prancha</option><option value="Munck">Munck</option><option value="Guindaste">Guindaste</option><option value="Cavalo+Prancha">Cavalo+Prancha</option><option value="Outro">Outro</option></select></div>
       <div class="fg"><label>Placa</label><input id="vPlaca" type="text" placeholder="ABC-1234"></div>
     </div>
     <div class="frow">
@@ -360,8 +360,7 @@
         <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="Prancha" class="oHab"> Prancha</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="Munck" class="oHab"> Munck</label>
         <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="Guindaste" class="oHab"> Guindaste</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="Baú" class="oHab"> Baú</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="Carroceria" class="oHab"> Carroceria</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="checkbox" value="Cavalo+Prancha" class="oHab"> Cavalo+Prancha</label>
       </div>
     </div>
     <div class="fg"><label>Status</label><select id="oStatus"><option value="ativo">Ativo</option><option value="ferias">Férias</option><option value="afastado">Afastado</option></select></div>
@@ -516,7 +515,7 @@ function render(){
 
   // Veiculos
   const vg=document.getElementById('vGrid');
-  const tipoIcon={'Prancha':'🚛','Munck':'🏗','Guindaste':'⬆','Baú':'📦','Carroceria':'🚚'};
+  const tipoIcon={'Prancha':'🚛','Munck':'🏗','Guindaste':'⬆','Cavalo+Prancha':'🚜'};
   vg.innerHTML=V.length?V.map(v=>{
     const icon=tipoIcon[v.tipo]||'🚛';
     const badge=v.status||'disponivel';

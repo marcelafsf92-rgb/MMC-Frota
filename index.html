@@ -372,7 +372,9 @@
 
 <script>
 // ── Config ──
-const API='https://script.google.com/macros/s/AKfycbzUBhDAvIwVzRWpCZyI_2zRDKvB0VCs0gdosIen6l0_2vqaCUOgjsr97CVoU5ilflLWAg/exec';
+const SUPA_URL='https://yxibxbeoeqcqcqpfensv.supabase.co';
+const SUPA_KEY='sb_publishable_UOmrmMH79geJ-ITCNGV1-w_2ShPS_yn';
+const SUPA_H={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
 const EDIT_PASS='frota2026';
 
 // ── State ──
@@ -415,11 +417,31 @@ function openModal(id){document.getElementById(id).classList.add('open')}
 function checkEditor(){if(isEditor)return true;const p=prompt('Senha de edição:');if(p===EDIT_PASS){isEditor=true;sessionStorage.setItem('mmc_frota_editor','true');applyMode();toast('Modo editor ativado!');return true}toast('Senha incorreta.','err');return false}
 function applyMode(){document.body.classList.toggle('editor-mode',isEditor);const b=document.getElementById('modeBtn');b.textContent=isEditor?'Editor':'Visualização';b.style.background=isEditor?'#10b981':'rgba(255,255,255,.1)'}
 
-// ── API ──
+// ── Supabase API ──
+async function supaGet(table){const r=await fetch(SUPA_URL+'/rest/v1/'+table+'?select=*&order=id',{headers:SUPA_H});return r.json()}
+async function supaPost(table,data){return fetch(SUPA_URL+'/rest/v1/'+table,{method:'POST',headers:{...SUPA_H,'Prefer':'return=minimal'},body:JSON.stringify(data)})}
+async function supaPatch(table,id,data){return fetch(SUPA_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{...SUPA_H,'Prefer':'return=minimal'},body:JSON.stringify(data)})}
+async function supaDel(table,id){return fetch(SUPA_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:SUPA_H})}
+
+// Legacy api() wrapper for compatibility
 async function api(body){
-  const url=API+'?payload='+encodeURIComponent(JSON.stringify(body))+'&_='+Date.now();
-  const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);
-  return JSON.parse(await r.text());
+  const a=body.action;
+  if(a==='frota_getAllData'){
+    const [v,o,e]=await Promise.all([supaGet('frota_veiculos'),supaGet('frota_operadores'),supaGet('frota_escala')]);
+    return {veiculos:v,operadores:o,escala:e};
+  }
+  if(a==='frota_addVeiculo')return supaPost('frota_veiculos',body.item);
+  if(a==='frota_updVeiculo')return supaPatch('frota_veiculos',body.item.id,body.item);
+  if(a==='frota_delVeiculo')return supaDel('frota_veiculos',body.id);
+  if(a==='frota_addOperador')return supaPost('frota_operadores',body.item);
+  if(a==='frota_updOperador')return supaPatch('frota_operadores',body.item.id,body.item);
+  if(a==='frota_delOperador')return supaDel('frota_operadores',body.id);
+  if(a==='frota_addEscala')return supaPost('frota_escala',body.item);
+  if(a==='frota_updEscala')return supaPatch('frota_escala',body.item.id,body.item);
+  if(a==='frota_delEscala')return supaDel('frota_escala',body.id);
+  // Fetch machines from main panel for the machine selector
+  if(a==='getAll'){const r=await fetch(SUPA_URL+'/rest/v1/maquinas?select=*&order=id',{headers:SUPA_H});return{data:await r.json()}}
+  return {};
 }
 function localSave(){localStorage.setItem('mmc_frota',JSON.stringify({V,O,E,ts:Date.now()}))}
 function bgSync(){

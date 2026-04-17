@@ -310,7 +310,10 @@
 <div class="mbg" id="mEscala"><div class="modal">
   <div class="mhd"><span class="mtitle" id="mEscTitle">Nova Escala</span><button class="mx" onclick="closeModal('mEscala')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="mbd">
-    <div class="fg"><label>Data</label><input id="eData" type="date"></div>
+    <div class="frow">
+      <div class="fg"><label>Data Início</label><input id="eData" type="date"></div>
+      <div class="fg"><label>Data Fim (opcional)</label><input id="eDataFim" type="date"></div>
+    </div>
     <div class="frow">
       <div class="fg"><label>Veículo</label><select id="eVeiculo"></select></div>
       <div class="fg"><label>Operador</label><select id="eOperador"></select></div>
@@ -464,7 +467,7 @@ function nextDay(){const d=new Date(selDate+'T12:00:00');d.setDate(d.getDate()+1
 // ── Render ──
 function render(){
   const todayStr=today();
-  const escHoje=E.filter(e=>e.data===selDate);
+  const escHoje=E.filter(e=>e.data===selDate||(e.data_fim&&e.data<=selDate&&e.data_fim>=selDate));
   const veicDisp=V.filter(v=>v.status==='disponivel');
   const veicEmServ=V.filter(v=>v.status==='em_servico');
   const alocadosHoje=escHoje.map(e=>e.veiculo_id);
@@ -501,7 +504,7 @@ function render(){
       +'<span class="sched-status-label '+st+'">'+esc(stLabel)+'</span>'
       +'</div>'
       +'<div class="sched-meta">'
-      +'<span>👤 <b>'+esc(e.operador_nome||'—')+'</b></span>'
+      +'<span>👤 <b>'+esc(e.operador_nome||'Sem operador')+'</b></span>'
       +'<span>🔧 '+esc(e.servico||'—')+'</span>'
       +(e.cliente?'<span>🏢 '+esc(e.cliente)+'</span>':'')
       +(e.maquina?'<span>🏗 '+esc(e.maquina)+'</span>':'')
@@ -586,13 +589,12 @@ function populateMaquinas(){
 }
 
 // ── CRUD: Escala ──
-function openAddEsc(){editEscId=null;['eDestino','eCliente','eMaquina','eObs','eHoraSaida','eHoraRetorno'].forEach(i=>document.getElementById(i).value='');document.getElementById('eData').value=selDate;document.getElementById('eVeiculo').value='';document.getElementById('eOperador').value='';document.getElementById('ePrioridade').value='normal';document.getElementById('eStatus').value='agendado';document.getElementById('eServico').value='Frete de máquina';document.getElementById('mEscTitle').textContent='Nova Escala';populateSelects();openModal('mEscala')}
-function editEsc(id){const e=E.find(x=>x.id===id);if(!e)return;editEscId=id;populateSelects();document.getElementById('eData').value=e.data||selDate;document.getElementById('eVeiculo').value=e.veiculo_id||'';document.getElementById('eOperador').value=e.operador_id||'';document.getElementById('eServico').value=e.servico||'';document.getElementById('eDestino').value=e.destino||'';document.getElementById('eCliente').value=e.cliente||'';document.getElementById('eMaquina').value=e.maquina||'';document.getElementById('ePrioridade').value=e.prioridade||'normal';document.getElementById('eStatus').value=e.status||'agendado';document.getElementById('eHoraSaida').value=e.hora_saida||'';document.getElementById('eHoraRetorno').value=e.hora_retorno||'';document.getElementById('eObs').value=e.observacoes||'';document.getElementById('mEscTitle').textContent='Editar Escala';openModal('mEscala')}
+function openAddEsc(){editEscId=null;['eDestino','eCliente','eMaquina','eObs','eHoraSaida','eHoraRetorno','eDataFim'].forEach(i=>document.getElementById(i).value='');document.getElementById('eData').value=selDate;document.getElementById('eVeiculo').value='';document.getElementById('eOperador').value='';document.getElementById('ePrioridade').value='normal';document.getElementById('eStatus').value='agendado';document.getElementById('eServico').value='Frete de máquina';document.getElementById('mEscTitle').textContent='Nova Escala';populateSelects();openModal('mEscala')}
+function editEsc(id){const e=E.find(x=>x.id===id);if(!e)return;editEscId=id;populateSelects();document.getElementById('eData').value=e.data||selDate;document.getElementById('eDataFim').value=e.data_fim||'';document.getElementById('eVeiculo').value=e.veiculo_id||'';document.getElementById('eOperador').value=e.operador_id||'';document.getElementById('eServico').value=e.servico||'';document.getElementById('eDestino').value=e.destino||'';document.getElementById('eCliente').value=e.cliente||'';document.getElementById('eMaquina').value=e.maquina||'';document.getElementById('ePrioridade').value=e.prioridade||'normal';document.getElementById('eStatus').value=e.status||'agendado';document.getElementById('eHoraSaida').value=e.hora_saida||'';document.getElementById('eHoraRetorno').value=e.hora_retorno||'';document.getElementById('eObs').value=e.observacoes||'';document.getElementById('mEscTitle').textContent='Editar Escala';openModal('mEscala')}
 async function saveEsc(){
   const vSel=document.getElementById('eVeiculo'),oSel=document.getElementById('eOperador');
   if(!vSel.value){toast('Selecione o veículo.','err');return}
-  if(!oSel.value){toast('Selecione o operador.','err');return}
-  const d={id:editEscId||uid(),data:document.getElementById('eData').value,veiculo_id:vSel.value,veiculo_nome:vSel.options[vSel.selectedIndex].dataset.name||'',operador_id:oSel.value,operador_nome:oSel.options[oSel.selectedIndex].dataset.name||'',servico:document.getElementById('eServico').value,destino:document.getElementById('eDestino').value.toUpperCase(),cliente:document.getElementById('eCliente').value.toUpperCase(),maquina:document.getElementById('eMaquina').value.toUpperCase(),prioridade:document.getElementById('ePrioridade').value,status:document.getElementById('eStatus').value,hora_saida:document.getElementById('eHoraSaida').value,hora_retorno:document.getElementById('eHoraRetorno').value,observacoes:document.getElementById('eObs').value.toUpperCase()};
+  const d={id:editEscId||uid(),data:document.getElementById('eData').value,data_fim:document.getElementById('eDataFim').value||'',veiculo_id:vSel.value,veiculo_nome:vSel.options[vSel.selectedIndex].dataset.name||'',operador_id:oSel.value||'',operador_nome:oSel.value?oSel.options[oSel.selectedIndex].dataset.name:'',servico:document.getElementById('eServico').value,destino:document.getElementById('eDestino').value.toUpperCase(),cliente:document.getElementById('eCliente').value.toUpperCase(),maquina:document.getElementById('eMaquina').value.toUpperCase(),prioridade:document.getElementById('ePrioridade').value,status:document.getElementById('eStatus').value,hora_saida:document.getElementById('eHoraSaida').value,hora_retorno:document.getElementById('eHoraRetorno').value,observacoes:document.getElementById('eObs').value.toUpperCase()};
   const eid=editEscId;closeModal('mEscala');
   const idx=E.findIndex(x=>x.id===d.id);if(idx>=0)E[idx]=d;else E.push(d);localSave();render();toast(eid?'Escala atualizada!':'Escala criada!');
   try{await api({action:eid?'frota_updEscala':'frota_addEscala',item:d});bgSync()}catch{toast('Erro ao salvar.','err')}
@@ -658,7 +660,7 @@ function renderCal(){
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const isToday=dateStr===todayStr;
-    const dayEsc=E.filter(e=>e.data===dateStr);
+    const dayEsc=E.filter(e=>e.data===dateStr||(e.data_fim&&e.data<=dateStr&&e.data_fim>=dateStr));
     let evtsHtml='';
     const maxShow=3;
     dayEsc.slice(0,maxShow).forEach(e=>{
@@ -685,7 +687,7 @@ function calGoToday(){const d=new Date();calYear=d.getFullYear();calMonth=d.getM
 
 // ── Snapshot (generate image) ──
 function generateSnapshot(){
-  const escHoje=E.filter(e=>e.data===selDate);
+  const escHoje=E.filter(e=>e.data===selDate||(e.data_fim&&e.data<=selDate&&e.data_fim>=selDate));
   if(!escHoje.length){toast('Sem escalas para gerar imagem.','err');return}
   const canvas=document.createElement('canvas');
   const W=800,lineH=70,headerH=120,padH=20;

@@ -742,10 +742,15 @@ document.getElementById('btnAdd').addEventListener('click',openAddEsc);
 document.getElementById('btnAddV').addEventListener('click',openAddVeic);
 document.getElementById('btnAddO').addEventListener('click',openAddOper);
 document.getElementById('eSave').addEventListener('click',saveEsc);
-document.getElementById('eServico').addEventListener('change',()=>{
-  const isFrete=document.getElementById('eServico').value==='Frete de máquina';
-  document.getElementById('fgMaquina').style.display=isFrete?'flex':'none';
-});
+document.getElementById('eServico').addEventListener('change',toggleMaquina);
+document.getElementById('eVeiculo').addEventListener('change',toggleMaquina);
+function toggleMaquina(){
+  const vId=document.getElementById('eVeiculo').value;
+  const veic=V.find(v=>v.id===vId);
+  const tipo=(veic?.tipo||'').toLowerCase();
+  const isPrancha=tipo.includes('prancha');
+  document.getElementById('fgMaquina').style.display=isPrancha?'flex':'none';
+}
 document.getElementById('vSave').addEventListener('click',saveVeic);
 document.getElementById('oSave').addEventListener('click',saveOper);
 document.getElementById('prevDay').addEventListener('click',prevDay);

@@ -423,10 +423,11 @@ function checkEditor(){if(isEditor)return true;const p=prompt('Senha de edição
 function applyMode(){document.body.classList.toggle('editor-mode',isEditor);const b=document.getElementById('modeBtn');b.textContent=isEditor?'Editor':'Visualização';b.style.background=isEditor?'#10b981':'rgba(255,255,255,.1)'}
 
 // ── Supabase API ──
-async function supaGet(table){const r=await fetch(SUPA_URL+'/rest/v1/'+table+'?select=*&order=id',{headers:SUPA_H});return r.json()}
-async function supaPost(table,data){return fetch(SUPA_URL+'/rest/v1/'+table,{method:'POST',headers:{...SUPA_H,'Prefer':'return=minimal'},body:JSON.stringify(data)})}
-async function supaPatch(table,id,data){return fetch(SUPA_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{...SUPA_H,'Prefer':'return=minimal'},body:JSON.stringify(data)})}
-async function supaDel(table,id){return fetch(SUPA_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:SUPA_H})}
+let pendingOps = 0;
+async function supaGet(table){const r=await fetch(SUPA_URL+'/rest/v1/'+table+'?select=*&order=id',{headers:SUPA_H,cache:'no-store'});return r.json()}
+async function supaPost(table,data){pendingOps++;try{const r=await fetch(SUPA_URL+'/rest/v1/'+table,{method:'POST',headers:{...SUPA_H,'Prefer':'return=minimal'},body:JSON.stringify(data)});if(!r.ok)throw new Error('POST '+r.status);return r}finally{pendingOps--}}
+async function supaPatch(table,id,data){pendingOps++;try{const r=await fetch(SUPA_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{...SUPA_H,'Prefer':'return=minimal'},body:JSON.stringify(data)});if(!r.ok)throw new Error('PATCH '+r.status);return r}finally{pendingOps--}}
+async function supaDel(table,id){pendingOps++;try{const r=await fetch(SUPA_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:SUPA_H});if(!r.ok)throw new Error('DEL '+r.status);return r}finally{pendingOps--}}
 
 // Legacy api() wrapper for compatibility
 async function api(body){
@@ -450,7 +451,9 @@ async function api(body){
 }
 function localSave(){localStorage.setItem('mmc_frota',JSON.stringify({V,O,E,ts:Date.now()}))}
 function bgSync(){
+  if(pendingOps>0){setTimeout(bgSync,600);return}
   api({action:'frota_getAllData',dateFrom:'',dateTo:''}).then(r=>{
+    if(pendingOps>0)return;
     if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=normEscala(r.escala);
     localSave();render();populateSelects();
   }).catch(()=>{});

@@ -335,12 +335,9 @@
     </div>
     <div class="frow">
       <div class="fg"><label>Empresa</label><input id="iEmpresa" type="text" value="MMC"></div>
-      <div class="fg"><label>Rastreador</label><select id="iRastreador"><option value="">Nenhum</option><option>FTrack</option><option>STC</option><option>Outro</option></select></div>
-    </div>
-    <div class="frow">
-      <div class="fg"><label>Responsável (em uso)</label><input id="iResponsavel" type="text" placeholder="Quem está usando"></div>
       <div class="fg"><label>Status</label><select id="iStatus"><option value="disponivel">Disponível</option><option value="em_uso">Em uso</option><option value="manutencao">Manutenção</option><option value="inativo">Inativo</option></select></div>
     </div>
+    <div class="fg"><label>Responsável (em uso)</label><input id="iResponsavel" type="text" placeholder="Quem está usando"></div>
     <div class="fg"><label>KM atual</label><input id="iKm" type="text" placeholder="Opcional"></div>
     <div class="fg"><label>Observações</label><textarea id="iObs" rows="2"></textarea></div>
   </div>
@@ -803,7 +800,6 @@ function renderInterna(){
       +'<div class="vo-info">'
       +'<label>Modelo</label><span>'+esc(v.modelo||'—')+'</span>'
       +'<label>Empresa</label><span>'+esc(v.empresa||'MMC')+'</span>'
-      +(v.rastreador?'<label>Rastreador</label><span>'+esc(v.rastreador)+'</span>':'')
       +(v.responsavel?'<label>Usando</label><span>'+esc(v.responsavel)+'</span>':'')
       +(v.km_atual?'<label>KM</label><span>'+esc(v.km_atual)+'</span>':'')
       +'</div>'
@@ -820,7 +816,6 @@ function openAddInterna(){
   ['iPlaca','iModelo','iApelido','iResponsavel','iKm','iObs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('iEmpresa').value='MMC';
   document.getElementById('iTipo').value='Carro';
-  document.getElementById('iRastreador').value='';
   document.getElementById('iStatus').value='disponivel';
   document.getElementById('mInternaTitle').textContent='Novo Veículo Interno';
   openModal('mInterna');
@@ -834,7 +829,6 @@ function editInterna(id){
   document.getElementById('iModelo').value=v.modelo||'';
   document.getElementById('iApelido').value=v.apelido||'';
   document.getElementById('iEmpresa').value=v.empresa||'MMC';
-  document.getElementById('iRastreador').value=v.rastreador||'';
   document.getElementById('iResponsavel').value=v.responsavel||'';
   document.getElementById('iStatus').value=v.status||'disponivel';
   document.getElementById('iKm').value=v.km_atual||'';
@@ -851,7 +845,6 @@ async function saveInterna(){
     modelo:document.getElementById('iModelo').value.trim(),
     apelido:document.getElementById('iApelido').value.trim(),
     empresa:document.getElementById('iEmpresa').value.trim()||'MMC',
-    rastreador:document.getElementById('iRastreador').value,
     responsavel:document.getElementById('iResponsavel').value.trim(),
     status:document.getElementById('iStatus').value,
     km_atual:document.getElementById('iKm').value.trim(),

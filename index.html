@@ -132,6 +132,8 @@
     .vo-badge.ativo{background:#d1fae5;color:#065f46}.vo-badge.ativo::before{background:var(--green)}
     .vo-badge.ferias{background:#fef3c7;color:#92400e}.vo-badge.ferias::before{background:var(--amber)}
     .vo-badge.afastado{background:#fee2e2;color:#991b1b}.vo-badge.afastado::before{background:var(--red)}
+    .vo-badge.em_uso{background:#ede9fe;color:#5b21b6}.vo-badge.em_uso::before{background:#8b5cf6}
+    .vo-badge.inativo{background:#e5e7eb;color:#374151}.vo-badge.inativo::before{background:#6b7280}
     .vo-info{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
     .vo-info label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
     .vo-info span{font-size:13px;color:var(--text);font-weight:500}
@@ -252,6 +254,7 @@
   <button class="tbtn" data-tab="calendario">Calendário</button>
   <button class="tbtn" data-tab="veiculos">Veículos <span class="tc" id="tcV">0</span></button>
   <button class="tbtn" data-tab="operadores">Operadores <span class="tc" id="tcO">0</span></button>
+  <button class="tbtn" data-tab="interna">Frota Interna <span class="tc" id="tcI">0</span></button>
 </div></div>
 
 <div class="dash" id="dashboard">
@@ -304,6 +307,44 @@
     <button class="btn-gold" id="btnAddO"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Operador</button>
   </div>
   <div class="vo-grid" id="oGrid"></div>
+</div></div>
+
+<!-- Tab: Frota Interna -->
+<div class="tcont" id="tab-interna"><div class="bwrap">
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    <button class="btn-gold" id="btnAddI"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Veículo Interno</button>
+    <select id="iFiltroTipo" style="padding:8px 12px;border-radius:8px;border:1px solid var(--glass-border);background:#fff;font-family:inherit"><option value="">Todos os tipos</option><option>Carro</option><option>Caminhonete</option><option>Caminhão</option><option>Furgão</option><option>Guindaste</option><option>Outros</option></select>
+    <select id="iFiltroStatus" style="padding:8px 12px;border-radius:8px;border:1px solid var(--glass-border);background:#fff;font-family:inherit"><option value="">Todos status</option><option value="disponivel">Disponível</option><option value="em_uso">Em uso</option><option value="manutencao">Manutenção</option><option value="inativo">Inativo</option></select>
+    <input id="iFiltroBusca" type="search" placeholder="Busca por placa, modelo, apelido..." style="flex:1;min-width:180px;padding:8px 12px;border-radius:8px;border:1px solid var(--glass-border);background:#fff;font-family:inherit">
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Carros, caminhonetes, furgões e caminhões de uso interno MMC (obra, manutenção, frete interno, deslocamento da equipe). Não são locados.</p>
+  <div class="vo-grid" id="iGrid"></div>
+</div></div>
+
+<!-- Modal: Veículo Interno -->
+<div class="mbg" id="mInterna"><div class="modal">
+  <div class="mhd"><span class="mtitle" id="mInternaTitle">Novo Veículo Interno</span><button class="mx" onclick="closeModal('mInterna')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mbd">
+    <div class="frow">
+      <div class="fg"><label>Placa</label><input id="iPlaca" type="text" placeholder="ABC1234"></div>
+      <div class="fg"><label>Tipo</label><select id="iTipo"><option>Carro</option><option>Caminhonete</option><option>Caminhão</option><option>Furgão</option><option>Guindaste</option><option>Outros</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Modelo</label><input id="iModelo" type="text" placeholder="Ex: VW/GOL 1.6"></div>
+      <div class="fg"><label>Apelido</label><input id="iApelido" type="text" placeholder="Opcional"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Empresa</label><input id="iEmpresa" type="text" value="MMC"></div>
+      <div class="fg"><label>Rastreador</label><select id="iRastreador"><option value="">Nenhum</option><option>FTrack</option><option>STC</option><option>Outro</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Responsável (em uso)</label><input id="iResponsavel" type="text" placeholder="Quem está usando"></div>
+      <div class="fg"><label>Status</label><select id="iStatus"><option value="disponivel">Disponível</option><option value="em_uso">Em uso</option><option value="manutencao">Manutenção</option><option value="inativo">Inativo</option></select></div>
+    </div>
+    <div class="fg"><label>KM atual</label><input id="iKm" type="text" placeholder="Opcional"></div>
+    <div class="fg"><label>Observações</label><textarea id="iObs" rows="2"></textarea></div>
+  </div>
+  <div class="mft"><button class="btnc" onclick="closeModal('mInterna')">Cancelar</button><button class="btns" id="iSave">Salvar</button></div>
 </div></div>
 
 <!-- Modal: Escala -->
@@ -383,8 +424,8 @@ const SUPA_H={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type
 const EDIT_PASS='Mmc2026';
 
 // ── State ──
-let V=[],O=[],E=[];
-let editEscId=null,editVeicId=null,editOperId=null;
+let V=[],O=[],E=[],I=[];
+let editEscId=null,editVeicId=null,editOperId=null,editInternaId=null;
 let curTab='escala',selDate='';
 let isEditor=sessionStorage.getItem('mmc_frota_editor')==='true';
 
@@ -449,10 +490,16 @@ async function api(body){
   if(a==='getAll'){const r=await fetch(SUPA_URL+'/rest/v1/maquinas?select=*&order=id',{headers:SUPA_H});return{data:await r.json()}}
   return {};
 }
-function localSave(){localStorage.setItem('mmc_frota',JSON.stringify({V,O,E,ts:Date.now()}))}
+function localSave(){localStorage.setItem('mmc_frota',JSON.stringify({V,O,E,I,ts:Date.now()}))}
+async function fetchInterna(){
+  try{const r=await fetch(SUPA_URL+'/rest/v1/frota_interna?select=*&order=id',{headers:SUPA_H,cache:'no-store'});if(r.ok)I=await r.json()}catch{}
+}
 function bgSync(){
   if(pendingOps>0){setTimeout(bgSync,600);return}
-  api({action:'frota_getAllData',dateFrom:'',dateTo:''}).then(r=>{
+  Promise.all([
+    api({action:'frota_getAllData',dateFrom:'',dateTo:''}),
+    fetchInterna()
+  ]).then(([r])=>{
     if(pendingOps>0)return;
     if(r.veiculos)V=r.veiculos;if(r.operadores)O=r.operadores;if(r.escala)E=normEscala(r.escala);
     localSave();render();populateSelects();
@@ -460,7 +507,7 @@ function bgSync(){
 }
 
 // ── Tabs ──
-function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else render()}
+function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else if(t==='interna')renderInterna();else render()}
 
 // ── Date Navigation ──
 function setDate(d){selDate=d;document.getElementById('escalaDate').value=d;document.getElementById('dateLabel').textContent=dayLabel(d);render()}
@@ -483,6 +530,8 @@ function render(){
   document.getElementById('tcE').textContent=escHoje.length;
   document.getElementById('tcV').textContent=V.length;
   document.getElementById('tcO').textContent=O.length;
+  const tcI=document.getElementById('tcI');if(tcI)tcI.textContent=I.length;
+  if(curTab==='interna')renderInterna();
 
   // Escala
   const sg=document.getElementById('schedGrid');
@@ -725,18 +774,135 @@ function generateSnapshot(){
   });
 }
 
+// ── Frota Interna ──
+function renderInterna(){
+  const ftT=document.getElementById('iFiltroTipo')?.value||'';
+  const ftS=document.getElementById('iFiltroStatus')?.value||'';
+  const ftB=(document.getElementById('iFiltroBusca')?.value||'').toLowerCase().trim();
+  const filt=I.filter(v=>{
+    if(ftT && v.tipo!==ftT)return false;
+    if(ftS && (v.status||'disponivel')!==ftS)return false;
+    if(ftB){
+      const hay=((v.placa||'')+' '+(v.modelo||'')+' '+(v.apelido||'')+' '+(v.responsavel||'')+' '+(v.empresa||'')).toLowerCase();
+      if(!hay.includes(ftB))return false;
+    }
+    return true;
+  });
+  const ig=document.getElementById('iGrid');
+  if(!ig)return;
+  const tipoIcon={'Carro':'🚗','Caminhonete':'🛻','Caminhão':'🚚','Furgão':'🚐','Guindaste':'⬆','Outros':'🚘'};
+  const statusLabel={disponivel:'Disponível',em_uso:'Em uso',manutencao:'Manutenção',inativo:'Inativo'};
+  ig.innerHTML=filt.length?filt.map(v=>{
+    const st=v.status||'disponivel';
+    const icon=tipoIcon[v.tipo]||'🚗';
+    return '<div class="vo-card"><div class="vo-top">'
+      +'<div class="vo-icon" style="background:#f3e8ff;color:#6b21a8;font-size:22px">'+icon+'</div>'
+      +'<div style="flex:1"><div class="vo-name">'+esc(v.apelido||v.modelo||v.placa)+'</div>'
+      +'<div class="vo-sub">'+esc(v.tipo||'—')+' • '+esc(v.placa||'—')+'</div></div>'
+      +'<span class="vo-badge '+st+'">'+esc(statusLabel[st]||st)+'</span></div>'
+      +'<div class="vo-info">'
+      +'<label>Modelo</label><span>'+esc(v.modelo||'—')+'</span>'
+      +'<label>Empresa</label><span>'+esc(v.empresa||'MMC')+'</span>'
+      +(v.rastreador?'<label>Rastreador</label><span>'+esc(v.rastreador)+'</span>':'')
+      +(v.responsavel?'<label>Usando</label><span>'+esc(v.responsavel)+'</span>':'')
+      +(v.km_atual?'<label>KM</label><span>'+esc(v.km_atual)+'</span>':'')
+      +'</div>'
+      +(v.observacoes?'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+esc(v.observacoes)+'</div>':'')
+      +'<div class="vo-acts">'
+      +'<button class="vbtn" onclick="editInterna(\''+esc(v.id)+'\')">Editar</button>'
+      +'<button class="vbtn" style="color:var(--red)" onclick="delInterna(\''+esc(v.id)+'\')">Remover</button>'
+      +'</div></div>';
+  }).join(''):'<div class="cempty" style="grid-column:1/-1">'+(I.length?'Nenhum veículo bate com os filtros':'Nenhum veículo interno cadastrado')+'</div>';
+}
+function openAddInterna(){
+  if(!isEditor)return checkEditor();
+  editInternaId=null;
+  ['iPlaca','iModelo','iApelido','iResponsavel','iKm','iObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iEmpresa').value='MMC';
+  document.getElementById('iTipo').value='Carro';
+  document.getElementById('iRastreador').value='';
+  document.getElementById('iStatus').value='disponivel';
+  document.getElementById('mInternaTitle').textContent='Novo Veículo Interno';
+  openModal('mInterna');
+}
+function editInterna(id){
+  if(!isEditor)return checkEditor();
+  const v=I.find(x=>x.id===id);if(!v)return;
+  editInternaId=id;
+  document.getElementById('iPlaca').value=v.placa||'';
+  document.getElementById('iTipo').value=v.tipo||'Carro';
+  document.getElementById('iModelo').value=v.modelo||'';
+  document.getElementById('iApelido').value=v.apelido||'';
+  document.getElementById('iEmpresa').value=v.empresa||'MMC';
+  document.getElementById('iRastreador').value=v.rastreador||'';
+  document.getElementById('iResponsavel').value=v.responsavel||'';
+  document.getElementById('iStatus').value=v.status||'disponivel';
+  document.getElementById('iKm').value=v.km_atual||'';
+  document.getElementById('iObs').value=v.observacoes||'';
+  document.getElementById('mInternaTitle').textContent='Editar Veículo Interno';
+  openModal('mInterna');
+}
+async function saveInterna(){
+  const placa=document.getElementById('iPlaca').value.trim().toUpperCase();
+  if(!placa){toast('Placa obrigatória.','err');return}
+  const item={
+    placa:placa,
+    tipo:document.getElementById('iTipo').value,
+    modelo:document.getElementById('iModelo').value.trim(),
+    apelido:document.getElementById('iApelido').value.trim(),
+    empresa:document.getElementById('iEmpresa').value.trim()||'MMC',
+    rastreador:document.getElementById('iRastreador').value,
+    responsavel:document.getElementById('iResponsavel').value.trim(),
+    status:document.getElementById('iStatus').value,
+    km_atual:document.getElementById('iKm').value.trim(),
+    observacoes:document.getElementById('iObs').value.trim()
+  };
+  try{
+    if(editInternaId){
+      await supaPatch('frota_interna',editInternaId,item);
+      const idx=I.findIndex(v=>v.id===editInternaId);if(idx>=0)I[idx]={...I[idx],...item};
+      toast('Atualizado!');
+    } else {
+      const maxId=I.reduce((m,v)=>Math.max(m,parseInt(v.id)||0),0);
+      item.id=String(maxId+1);
+      await supaPost('frota_interna',item);
+      I.push(item);
+      toast('Cadastrado!');
+    }
+    closeModal('mInterna');localSave();renderInterna();
+    const tcI=document.getElementById('tcI');if(tcI)tcI.textContent=I.length;
+    bgSync();
+  }catch(e){toast('Erro ao salvar.','err')}
+}
+async function delInterna(id){
+  if(!isEditor)return checkEditor();
+  const v=I.find(x=>x.id===id);if(!v)return;
+  if(!confirm('Remover '+(v.apelido||v.modelo||v.placa)+'?'))return;
+  try{
+    await supaDel('frota_interna',id);
+    I=I.filter(x=>x.id!==id);
+    localSave();renderInterna();
+    const tcI=document.getElementById('tcI');if(tcI)tcI.textContent=I.length;
+    toast('Removido!');
+    bgSync();
+  }catch{toast('Erro ao remover.','err')}
+}
+
 // ── Load ──
 async function loadAll(){
   const cached=localStorage.getItem('mmc_frota');
-  if(cached){try{const c=JSON.parse(cached);V=c.V||[];O=c.O||[];E=c.E||[];render();populateSelects()}catch{}}
+  if(cached){try{const c=JSON.parse(cached);V=c.V||[];O=c.O||[];E=c.E||[];I=c.I||[];render();populateSelects()}catch{}}
   setLoading(true);
   try{
-    const r=await api({action:'frota_getAllData',dateFrom:'',dateTo:''});
+    const [r]=await Promise.all([
+      api({action:'frota_getAllData',dateFrom:'',dateTo:''}),
+      fetchInterna()
+    ]);
     if(r.veiculos)V=r.veiculos;
     if(r.operadores)O=r.operadores;
     if(r.escala)E=normEscala(r.escala);
     localSave();render();populateSelects();
-  }catch{if(!V.length&&!O.length)toast('Erro ao carregar.','err')}
+  }catch{if(!V.length&&!O.length&&!I.length)toast('Erro ao carregar.','err')}
   finally{setLoading(false)}
 }
 
@@ -758,6 +924,10 @@ function toggleMaquina(){
 }
 document.getElementById('vSave').addEventListener('click',saveVeic);
 document.getElementById('oSave').addEventListener('click',saveOper);
+document.getElementById('btnAddI').addEventListener('click',openAddInterna);
+document.getElementById('iSave').addEventListener('click',saveInterna);
+['iFiltroTipo','iFiltroStatus'].forEach(id=>document.getElementById(id).addEventListener('change',renderInterna));
+let _iBuscaTimer;document.getElementById('iFiltroBusca').addEventListener('input',()=>{clearTimeout(_iBuscaTimer);_iBuscaTimer=setTimeout(renderInterna,200)});
 document.getElementById('prevDay').addEventListener('click',prevDay);
 document.getElementById('nextDay').addEventListener('click',nextDay);
 document.getElementById('escalaDate').addEventListener('change',e=>setDate(e.target.value));

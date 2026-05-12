@@ -742,11 +742,11 @@ function generateSnapshot(){
   // Mobile-first: largura padrão WhatsApp/Instagram, altura ajustada ao conteúdo
   const W=1080;
   const padX=24;          // padding lateral enxuto
-  const padTop=20;        // espaço inicial mínimo
+  const padTop=14;        // espaço inicial mínimo
   const headerH=180;      // título + data + contador + linha dourada (compactado)
-  const cardH=148;        // cada escala ocupa 148px (3 linhas, fontes grandes)
+  const cardH=124;        // cada escala ocupa 124px (3 linhas justinhas, fontes grandes)
   const cardGap=6;        // espaço mínimo entre cards
-  const padBottom=20;     // espaço final mínimo
+  const padBottom=14;     // espaço final mínimo
   const H=headerH+padTop+escHoje.length*cardH+(escHoje.length-1)*cardGap+padBottom;
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
@@ -765,10 +765,11 @@ function generateSnapshot(){
   ctx.fillText('· Escala do Dia',padX+titleW2+12,70);
   // Data + contador na mesma linha
   ctx.font='700 48px Barlow Condensed, sans-serif';ctx.fillStyle='#F5A623';
-  ctx.fillText(dayLabel(selDate),padX,135);
+  const dataTxt=dayLabel(selDate);
+  const dW=ctx.measureText(dataTxt).width;  // medir COM a font da data
+  ctx.fillText(dataTxt,padX,135);
   ctx.font='500 28px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.5)';
-  const dW=ctx.measureText(dayLabel(selDate)).width;
-  ctx.fillText('· '+escHoje.length+' serviço(s)',padX+dW+20,135);
+  ctx.fillText('· '+escHoje.length+' serviço(s)',padX+dW+24,135);
   // Linha dourada
   ctx.fillStyle='#F5A623';ctx.fillRect(0,headerH-4,W,4);
   // ── CARDS DE ESCALA ──
@@ -791,26 +792,26 @@ function generateSnapshot(){
     ctx.font='700 22px Barlow Condensed, sans-serif';
     const stW=ctx.measureText(stTxt).width+32;
     ctx.fillStyle=stCol+'30';
-    roundRect(ctx,W-padX-stW-14,y+14,stW,36,18);
+    roundRect(ctx,W-padX-stW-14,y+10,stW,36,18);
     ctx.fillStyle=stCol;
-    ctx.fillText(stTxt,W-padX-stW+2,y+39);
+    ctx.fillText(stTxt,W-padX-stW+2,y+35);
     // Linha 1 — veículo → destino (BEM grande)
     ctx.font='800 44px Barlow Condensed, sans-serif';ctx.fillStyle='#fff';
     const titulo=(e.veiculo_nome||'—')+'  →  '+(e.destino||'—');
-    ctx.fillText(truncar(ctx,titulo,W-padX*2-stW-50),padX+28,y+54);
+    ctx.fillText(truncar(ctx,titulo,W-padX*2-stW-50),padX+28,y+48);
     // Linha 2 — Operador (com label dourado)
     ctx.font='700 30px DM Sans, sans-serif';ctx.fillStyle='#F5A623';
-    ctx.fillText('Operador: ',padX+28,y+98);
+    ctx.fillText('Operador: ',padX+28,y+84);
     const opLabelW=ctx.measureText('Operador: ').width;
     ctx.font='600 30px DM Sans, sans-serif';ctx.fillStyle='#fff';
-    ctx.fillText(e.operador_nome||'—',padX+28+opLabelW,y+98);
+    ctx.fillText(e.operador_nome||'—',padX+28+opLabelW,y+84);
     // Linha 3 — serviço + cliente + hora + máquina (compacta)
     ctx.font='500 26px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.78)';
     let info=e.servico||'';
     if(e.cliente) info += '  ·  '+e.cliente;
     if(e.hora_saida) info += '  ·  '+e.hora_saida+(e.hora_retorno?' → '+e.hora_retorno:'');
     if(e.maquina) info += '  ·  '+e.maquina;
-    ctx.fillText(truncar(ctx,info,W-padX*2-50),padX+28,y+132);
+    ctx.fillText(truncar(ctx,info,W-padX*2-50),padX+28,y+114);
     y+=cardH+cardGap;
   });
   canvas.toBlob(blob=>{

@@ -739,36 +739,107 @@ function generateSnapshot(){
   const escHoje=E.filter(e=>e.data===selDate||(e.data_fim&&e.data<=selDate&&e.data_fim>=selDate));
   if(!escHoje.length){toast('Sem escalas para gerar imagem.','err');return}
   const canvas=document.createElement('canvas');
-  const W=800,lineH=70,headerH=120,padH=20;
-  const H=headerH+escHoje.length*lineH+padH*2;
+  // Mobile-first: largura padrão WhatsApp/Instagram, altura ajustada ao conteúdo
+  const W=1080;
+  const padX=48;          // padding lateral generoso
+  const headerH=240;      // título + data + contador + linha dourada
+  const cardH=180;        // cada escala ocupa 180px (3 linhas + respiro)
+  const cardGap=12;       // espaço entre cards
+  const footerH=80;       // rodapé com aviso
+  const H=headerH+escHoje.length*cardH+(escHoje.length-1)*cardGap+padX*2+footerH;
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
-  // Background
-  ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H);
-  // Header
+  // Background gradiente sutil (azul escuro -> mais escuro)
+  const bgGrad=ctx.createLinearGradient(0,0,0,H);
+  bgGrad.addColorStop(0,'#1e293b');bgGrad.addColorStop(1,'#0f172a');
+  ctx.fillStyle=bgGrad;ctx.fillRect(0,0,W,H);
+  // ── HEADER ──
+  ctx.font='800 56px Barlow Condensed, sans-serif';ctx.fillStyle='#fff';
+  ctx.fillText('MMC FROTA',padX,90);
+  ctx.font='600 36px Barlow Condensed, sans-serif';ctx.fillStyle='rgba(255,255,255,.65)';
+  ctx.fillText('Escala do Dia',padX,135);
+  // Data destaque
+  ctx.font='700 42px Barlow Condensed, sans-serif';ctx.fillStyle='#F5A623';
+  const dataTxt=dayLabel(selDate);
+  ctx.fillText(dataTxt,padX,190);
+  // Contador
+  ctx.font='500 24px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.fillText(escHoje.length+' serviço(s) agendado(s)',padX,225);
+  // Linha dourada
   ctx.fillStyle='#F5A623';ctx.fillRect(0,headerH-4,W,4);
-  ctx.font='bold 28px Barlow Condensed, sans-serif';ctx.fillStyle='#fff';ctx.fillText('MMC FROTA — Escala do Dia',30,45);
-  ctx.font='600 20px Barlow Condensed, sans-serif';ctx.fillStyle='#F5A623';ctx.fillText(dayLabel(selDate),30,80);
-  ctx.font='14px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.5)';ctx.fillText(escHoje.length+' serviço(s) agendado(s)',30,105);
-  // Lines
-  let y=headerH+padH;
+  // ── CARDS DE ESCALA ──
+  let y=headerH+padX;
+  const stMap={em_andamento:'em_execucao',aberto:'agendado',deslocamento:'em_rota'};
+  const stColor={agendado:'#3b82f6',em_rota:'#f59e0b',em_execucao:'#8b5cf6',concluido:'#10b981'};
+  const stLabel={agendado:'AGENDADO',em_rota:'EM ROTA',em_execucao:'EM EXECUÇÃO',concluido:'CONCLUÍDO'};
   escHoje.forEach((e,i)=>{
-    ctx.fillStyle=i%2===0?'rgba(255,255,255,.05)':'rgba(255,255,255,.02)';
-    ctx.fillRect(0,y,W,lineH);
+    // Card background
+    ctx.fillStyle='rgba(255,255,255,.06)';
+    roundRect(ctx,padX,y,W-padX*2,cardH,16);
+    // Barra colorida lateral (prioridade)
     const priorColor=e.prioridade==='urgente'?'#ef4444':e.prioridade==='alta'?'#f59e0b':'#3b82f6';
-    ctx.fillStyle=priorColor;ctx.fillRect(0,y,5,lineH);
-    ctx.font='bold 16px Barlow Condensed, sans-serif';ctx.fillStyle='#fff';
-    ctx.fillText((e.veiculo_nome||'—')+' → '+(e.destino||'—'),20,y+24);
-    ctx.font='13px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.7)';
-    ctx.fillText('Operador: '+(e.operador_nome||'—')+'   |   '+e.servico+(e.hora_saida?' — '+e.hora_saida:'')+(e.cliente?'   |   Cliente: '+e.cliente:''),20,y+48);
-    y+=lineH;
+    ctx.fillStyle=priorColor;
+    roundRect(ctx,padX,y,8,cardH,4);
+    // Status badge
+    const st=stMap[e.status]||e.status||'agendado';
+    const stCol=stColor[st]||'#3b82f6';
+    const stTxt=stLabel[st]||st.toUpperCase();
+    ctx.font='700 18px Barlow Condensed, sans-serif';
+    const stW=ctx.measureText(stTxt).width+28;
+    ctx.fillStyle=stCol+'30';
+    roundRect(ctx,W-padX-stW-16,y+20,stW,32,16);
+    ctx.fillStyle=stCol;
+    ctx.fillText(stTxt,W-padX-stW-2,y+42);
+    // Linha 1 — veículo → destino (grande, destaque)
+    ctx.font='800 38px Barlow Condensed, sans-serif';ctx.fillStyle='#fff';
+    const titulo=(e.veiculo_nome||'—')+'  →  '+(e.destino||'—');
+    ctx.fillText(truncar(ctx,titulo,W-padX*2-stW-40),padX+28,y+58);
+    // Linha 2 — Operador
+    ctx.font='600 26px DM Sans, sans-serif';ctx.fillStyle='#F5A623';
+    ctx.fillText('Operador: ',padX+28,y+102);
+    ctx.font='500 26px DM Sans, sans-serif';ctx.fillStyle='#fff';
+    const opLabelW=ctx.measureText('Operador: ').width;
+    ctx.font='600 26px DM Sans, sans-serif';
+    ctx.fillText(e.operador_nome||'—',padX+28+opLabelW,y+102);
+    // Linha 3 — serviço + cliente + hora (compacta)
+    ctx.font='500 22px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.75)';
+    let info=e.servico||'';
+    if(e.cliente) info += '   ·   '+e.cliente;
+    if(e.hora_saida) info += '   ·   '+e.hora_saida+(e.hora_retorno?' → '+e.hora_retorno:'');
+    if(e.maquina) info += '   ·   '+e.maquina;
+    ctx.fillText(truncar(ctx,info,W-padX*2-40),padX+28,y+142);
+    y+=cardH+cardGap;
   });
+  // ── FOOTER ──
+  ctx.font='500 20px DM Sans, sans-serif';ctx.fillStyle='rgba(255,255,255,.35)';
+  ctx.textAlign='center';
+  ctx.fillText('Gerado pelo Painel MMC Frota · '+new Date().toLocaleString('pt-BR'),W/2,H-30);
+  ctx.textAlign='start';
   canvas.toBlob(blob=>{
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download='escala-'+selDate+'.png';a.click();
     URL.revokeObjectURL(url);
     toast('Imagem gerada! Envie no WhatsApp.');
   });
+}
+// Helpers usados pelo snapshot
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();ctx.fill();
+}
+function truncar(ctx,txt,maxW){
+  if(ctx.measureText(txt).width<=maxW)return txt;
+  let lo=0,hi=txt.length;
+  while(lo<hi){
+    const mid=(lo+hi+1)>>1;
+    if(ctx.measureText(txt.slice(0,mid)+'…').width<=maxW)lo=mid;else hi=mid-1;
+  }
+  return txt.slice(0,lo)+'…';
 }
 
 // ── Frota Interna ──

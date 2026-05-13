@@ -359,7 +359,15 @@
     </div>
     <div class="fg"><label>Tipo de Serviço</label><select id="eServico"><option value="Frete de máquina">Frete de máquina</option><option value="Locação">Locação</option><option value="Uso interno MMC">Uso interno MMC</option><option value="Manutenção">Manutenção</option><option value="Outro">Outro</option></select></div>
     <div class="frow">
-      <div class="fg"><label>Destino / Endereço</label><input id="eDestino" type="text" placeholder="Ex: Obra Ribeirão Preto"></div>
+      <div class="fg"><label>Destino / Endereço</label>
+        <div style="display:flex;gap:6px">
+          <input id="eDestino" type="text" placeholder="Ex: Fazenda Santa Ana, São Joaquim da Barra - SP" style="flex:1">
+          <button type="button" id="eMapsBtn" title="Buscar no Google Maps (abre em nova aba)" style="background:#1E3A8A;color:#fff;border:none;border-radius:8px;min-width:46px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px" onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1E3A8A'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </button>
+        </div>
+        <small style="display:block;margin-top:4px;color:var(--muted);font-size:11px">💡 Cole o endereço completo ou o link do Google Maps. O link clicável aparece na mensagem do WhatsApp.</small>
+      </div>
       <div class="fg"><label>Cliente</label><input id="eCliente" type="text" placeholder="Nome do cliente"></div>
     </div>
     <div class="fg" id="fgMaquina"><label>Máquina (se frete)</label><select id="eMaquina"><option value="">Carregando máquinas...</option></select></div>
@@ -852,11 +860,17 @@ function generateTextSnapshot(){
     if(st!=='agendado') linhas.push('🏷 _'+stLabel[st]+'_');
     // Observacoes
     if(e.observacoes) linhas.push('💬 '+e.observacoes);
-    // Endereco + link Maps (usando o destino)
+    // Endereco + link Maps (usando o destino). Se destino ja eh URL do Maps, usa direto.
     if(e.destino){
-      const url='https://maps.google.com/?q='+encodeURIComponent(e.destino);
-      linhas.push('📍 '+e.destino);
-      linhas.push(url);
+      const isUrl=/^https?:\/\//i.test(e.destino.trim());
+      if(isUrl){
+        linhas.push('📍 Localização:');
+        linhas.push(e.destino.trim());
+      } else {
+        const url='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(e.destino);
+        linhas.push('📍 '+e.destino);
+        linhas.push(url);
+      }
     }
     linhas.push('');
   });
@@ -1055,6 +1069,11 @@ document.getElementById('nextDay').addEventListener('click',nextDay);
 document.getElementById('escalaDate').addEventListener('change',e=>setDate(e.target.value));
 document.getElementById('snapBtn').addEventListener('click',generateSnapshot);
 document.getElementById('textBtn').addEventListener('click',generateTextSnapshot);
+document.getElementById('eMapsBtn').addEventListener('click',()=>{
+  const q=document.getElementById('eDestino').value.trim();
+  const url=q?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q):'https://www.google.com/maps';
+  window.open(url,'_blank','noopener');
+});
 document.getElementById('calPrev').addEventListener('click',calPrevMonth);
 document.getElementById('calNext').addEventListener('click',calNextMonth);
 document.getElementById('calToday').addEventListener('click',calGoToday);

@@ -359,19 +359,16 @@
     </div>
     <div class="fg"><label>Tipo de Serviço</label><select id="eServico"><option value="Frete de máquina">Frete de máquina</option><option value="Locação">Locação</option><option value="Uso interno MMC">Uso interno MMC</option><option value="Manutenção">Manutenção</option><option value="Outro">Outro</option></select></div>
     <div class="frow">
-      <div class="fg"><label>Destino / Local</label>
-        <input id="eDestino" type="text" placeholder="Ex: Fazenda Santa Ana, FEAPAN, Obra do João">
+      <div class="fg"><label>Destino / Endereço</label>
+        <div style="display:flex;gap:6px">
+          <input id="eDestino" type="text" placeholder="Nome do local ou cole link maps.app.goo.gl/..." style="flex:1">
+          <button type="button" id="eMapsBtn" title="Buscar no Google Maps (abre em nova aba)" style="background:#1E3A8A;color:#fff;border:none;border-radius:8px;min-width:46px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1E3A8A'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </button>
+        </div>
+        <small style="display:block;margin-top:4px;color:var(--muted);font-size:11px">💡 Pode ser o nome do lugar OU cole direto o link do Maps. Clica no pin pra buscar.</small>
       </div>
       <div class="fg"><label>Cliente</label><input id="eCliente" type="text" placeholder="Nome do cliente"></div>
-    </div>
-    <div class="fg"><label>Endereço / Link do Maps</label>
-      <div style="display:flex;gap:6px">
-        <input id="eEndereco" type="text" placeholder="Cole o endereço completo ou link maps.app.goo.gl/..." style="flex:1">
-        <button type="button" id="eMapsBtn" title="Buscar no Google Maps (abre em nova aba)" style="background:#1E3A8A;color:#fff;border:none;border-radius:8px;min-width:46px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1E3A8A'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </button>
-      </div>
-      <small style="display:block;margin-top:4px;color:var(--muted);font-size:11px">💡 Clica no pin pra buscar no Maps pelo nome do Destino. Cole aqui o endereço completo ou o link curto compartilhado (maps.app.goo.gl).</small>
     </div>
     <div class="fg" id="fgMaquina"><label>Máquina (se frete)</label><select id="eMaquina"><option value="">Carregando máquinas...</option></select></div>
     <div class="frow">
@@ -650,16 +647,16 @@ function populateMaquinas(){
 }
 
 // ── CRUD: Escala ──
-function openAddEsc(){editEscId=null;['eDestino','eEndereco','eCliente','eMaquina','eObs','eHoraSaida','eHoraRetorno','eDataFim'].forEach(i=>document.getElementById(i).value='');document.getElementById('eData').value=selDate;document.getElementById('eVeiculo').value='';document.getElementById('eOperador').value='';document.getElementById('ePrioridade').value='normal';document.getElementById('eStatus').value='agendado';document.getElementById('eServico').value='Frete de máquina';document.getElementById('mEscTitle').textContent='Nova Escala';populateSelects();openModal('mEscala')}
-function editEsc(id){const e=E.find(x=>x.id===id);if(!e)return;editEscId=id;populateSelects();document.getElementById('eData').value=e.data||selDate;document.getElementById('eDataFim').value=e.data_fim||'';document.getElementById('eVeiculo').value=e.veiculo_id||'';document.getElementById('eOperador').value=e.operador_id||'';document.getElementById('eServico').value=e.servico||'';document.getElementById('eDestino').value=e.destino||'';document.getElementById('eEndereco').value=e.endereco||'';document.getElementById('eCliente').value=e.cliente||'';document.getElementById('eMaquina').value=e.maquina||'';document.getElementById('ePrioridade').value=e.prioridade||'normal';document.getElementById('eStatus').value=e.status||'agendado';document.getElementById('eHoraSaida').value=e.hora_saida||'';document.getElementById('eHoraRetorno').value=e.hora_retorno||'';document.getElementById('eObs').value=e.observacoes||'';document.getElementById('mEscTitle').textContent='Editar Escala';openModal('mEscala')}
+function openAddEsc(){editEscId=null;['eDestino','eCliente','eMaquina','eObs','eHoraSaida','eHoraRetorno','eDataFim'].forEach(i=>document.getElementById(i).value='');document.getElementById('eData').value=selDate;document.getElementById('eVeiculo').value='';document.getElementById('eOperador').value='';document.getElementById('ePrioridade').value='normal';document.getElementById('eStatus').value='agendado';document.getElementById('eServico').value='Frete de máquina';document.getElementById('mEscTitle').textContent='Nova Escala';populateSelects();openModal('mEscala')}
+function editEsc(id){const e=E.find(x=>x.id===id);if(!e)return;editEscId=id;populateSelects();document.getElementById('eData').value=e.data||selDate;document.getElementById('eDataFim').value=e.data_fim||'';document.getElementById('eVeiculo').value=e.veiculo_id||'';document.getElementById('eOperador').value=e.operador_id||'';document.getElementById('eServico').value=e.servico||'';document.getElementById('eDestino').value=e.destino||'';document.getElementById('eCliente').value=e.cliente||'';document.getElementById('eMaquina').value=e.maquina||'';document.getElementById('ePrioridade').value=e.prioridade||'normal';document.getElementById('eStatus').value=e.status||'agendado';document.getElementById('eHoraSaida').value=e.hora_saida||'';document.getElementById('eHoraRetorno').value=e.hora_retorno||'';document.getElementById('eObs').value=e.observacoes||'';document.getElementById('mEscTitle').textContent='Editar Escala';openModal('mEscala')}
 async function saveEsc(){
   const vSel=document.getElementById('eVeiculo'),oSel=document.getElementById('eOperador');
   if(!vSel.value){toast('Selecione o veículo.','err');return}
-  // endereco: nao upper-case (preserva link maps.app.goo.gl ou URLs)
-  const enderecoRaw=document.getElementById('eEndereco').value.trim();
-  const isUrl=/^https?:\/\//i.test(enderecoRaw);
-  const endereco=isUrl?enderecoRaw:enderecoRaw.toUpperCase();
-  const d={id:editEscId||uid(),data:document.getElementById('eData').value,data_fim:document.getElementById('eDataFim').value||'',veiculo_id:vSel.value,veiculo_nome:vSel.options[vSel.selectedIndex].dataset.name||'',operador_id:oSel.value||'',operador_nome:oSel.value?oSel.options[oSel.selectedIndex].dataset.name:'',servico:document.getElementById('eServico').value,destino:document.getElementById('eDestino').value.toUpperCase(),endereco:endereco,cliente:document.getElementById('eCliente').value.toUpperCase(),maquina:document.getElementById('eMaquina').value.toUpperCase(),prioridade:document.getElementById('ePrioridade').value,status:document.getElementById('eStatus').value,hora_saida:document.getElementById('eHoraSaida').value,hora_retorno:document.getElementById('eHoraRetorno').value,observacoes:document.getElementById('eObs').value.toUpperCase()};
+  // destino: nao upper-case se for URL (preserva link maps.app.goo.gl ou similar)
+  const destRaw=document.getElementById('eDestino').value.trim();
+  const destIsUrl=/^https?:\/\//i.test(destRaw);
+  const destino=destIsUrl?destRaw:destRaw.toUpperCase();
+  const d={id:editEscId||uid(),data:document.getElementById('eData').value,data_fim:document.getElementById('eDataFim').value||'',veiculo_id:vSel.value,veiculo_nome:vSel.options[vSel.selectedIndex].dataset.name||'',operador_id:oSel.value||'',operador_nome:oSel.value?oSel.options[oSel.selectedIndex].dataset.name:'',servico:document.getElementById('eServico').value,destino:destino,cliente:document.getElementById('eCliente').value.toUpperCase(),maquina:document.getElementById('eMaquina').value.toUpperCase(),prioridade:document.getElementById('ePrioridade').value,status:document.getElementById('eStatus').value,hora_saida:document.getElementById('eHoraSaida').value,hora_retorno:document.getElementById('eHoraRetorno').value,observacoes:document.getElementById('eObs').value.toUpperCase()};
   const eid=editEscId;closeModal('mEscala');
   const idx=E.findIndex(x=>x.id===d.id);if(idx>=0)E[idx]=d;else E.push(d);localSave();render();toast(eid?'Escala atualizada!':'Escala criada!');
   try{await api({action:eid?'frota_updEscala':'frota_addEscala',item:d});bgSync()}catch{toast('Erro ao salvar.','err')}
@@ -867,21 +864,17 @@ function generateTextSnapshot(){
     if(st!=='agendado') linhas.push('🏷 _'+stLabel[st]+'_');
     // Observacoes
     if(e.observacoes) linhas.push('💬 '+e.observacoes);
-    // Endereco + link Maps. Prioridade: campo endereco -> destino. Se for URL, usa direto.
-    const ender=(e.endereco||'').trim();
-    if(ender){
-      const isUrl=/^https?:\/\//i.test(ender);
+    // Destino + link Maps. Se for URL, usa direto; senao monta query no Google Maps.
+    if(e.destino){
+      const dest=e.destino.trim();
+      const isUrl=/^https?:\/\//i.test(dest);
       if(isUrl){
         linhas.push('📍 Localização:');
-        linhas.push(ender);
+        linhas.push(dest);
       } else {
-        linhas.push('📍 '+ender);
-        linhas.push('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(ender));
+        linhas.push('📍 '+dest);
+        linhas.push('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(dest));
       }
-    } else if(e.destino){
-      // Fallback pro destino se nao tiver endereco preenchido
-      linhas.push('📍 '+e.destino);
-      linhas.push('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(e.destino));
     }
     linhas.push('');
   });

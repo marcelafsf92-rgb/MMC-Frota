@@ -655,6 +655,8 @@ function editEsc(id){const e=E.find(x=>x.id===id);if(!e)return;editEscId=id;popu
 async function saveEsc(){
   const vSel=document.getElementById('eVeiculo'),oSel=document.getElementById('eOperador');
   if(!vSel.value){toast('Selecione o veículo.','err');return}
+  // Data vazia criaria escala fantasma: ''<=selDate é true, apareceria em todos os dias até data_fim
+  if(!document.getElementById('eData').value){toast('Informe a data de início.','err');return}
   // Destino: somente nome (upper-case). Endereco: pode ser texto ou URL (preserva link)
   const destino=document.getElementById('eDestino').value.trim().toUpperCase();
   const enderecoRaw=document.getElementById('eEndereco').value.trim();
@@ -775,10 +777,9 @@ function generateSnapshot(){
   // MMC FROTA + Escala do Dia na mesma linha
   ctx.font='800 64px Barlow Condensed, sans-serif';ctx.fillStyle='#fff';
   ctx.fillText('MMC FROTA',padX,70);
-  ctx.font='600 32px Barlow Condensed, sans-serif';ctx.fillStyle='rgba(255,255,255,.55)';
-  const titleW=ctx.measureText('MMC FROTA').width;
+  // mede com a MESMA font usada pra desenhar 'MMC FROTA' (64px) antes de trocar pra 32px
   ctx.font='800 64px Barlow Condensed, sans-serif';const titleW2=ctx.measureText('MMC FROTA').width;
-  ctx.font='600 32px Barlow Condensed, sans-serif';
+  ctx.font='600 32px Barlow Condensed, sans-serif';ctx.fillStyle='rgba(255,255,255,.55)';
   ctx.fillText('· Escala do Dia',padX+titleW2+12,70);
   // Data + contador na mesma linha
   ctx.font='700 48px Barlow Condensed, sans-serif';ctx.fillStyle='#F5A623';

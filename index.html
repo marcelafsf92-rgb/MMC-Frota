@@ -112,6 +112,7 @@
     .sb{width:32px;height:32px;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
     .sb svg{width:14px;height:14px}
     .sb-e{background:#eff6ff;color:var(--navy)}.sb-e:hover{background:#dbeafe}
+    .sb-c{background:#ecfdf5;color:#059669}.sb-c:hover{background:#d1fae5}
     .sb-d{background:#fff1f2;color:#e11d48}.sb-d:hover{background:#ffe4e6}
 
     /* Vehicle/Operator Grid */
@@ -576,6 +577,7 @@ function render(){
       +'<div class="sched-actions" style="display:flex;gap:6px;align-items:center">'
       +progressBtn
       +'<button class="sb sb-e" onclick="editEsc(\''+esc(e.id)+'\')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      +'<button class="sb sb-c" onclick="duplicarEsc(\''+esc(e.id)+'\')" title="Duplicar para outro dia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'
       +'<button class="sb sb-d" onclick="delEsc(\''+esc(e.id)+'\')" title="Remover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
       +'</div></div>';
   }).join('')}
@@ -652,6 +654,34 @@ function populateMaquinas(){
 // ── CRUD: Escala ──
 function openAddEsc(){editEscId=null;['eDestino','eEndereco','eCliente','eMaquina','eObs','eHoraSaida','eHoraRetorno','eDataFim'].forEach(i=>document.getElementById(i).value='');document.getElementById('eData').value=selDate;document.getElementById('eVeiculo').value='';document.getElementById('eOperador').value='';document.getElementById('ePrioridade').value='normal';document.getElementById('eStatus').value='agendado';document.getElementById('eServico').value='Frete de máquina';document.getElementById('mEscTitle').textContent='Nova Escala';populateSelects();openModal('mEscala')}
 function editEsc(id){const e=E.find(x=>x.id===id);if(!e)return;editEscId=id;populateSelects();document.getElementById('eData').value=e.data||selDate;document.getElementById('eDataFim').value=e.data_fim||'';document.getElementById('eVeiculo').value=e.veiculo_id||'';document.getElementById('eOperador').value=e.operador_id||'';document.getElementById('eServico').value=e.servico||'';document.getElementById('eDestino').value=e.destino||'';document.getElementById('eEndereco').value=e.endereco||'';document.getElementById('eCliente').value=e.cliente||'';document.getElementById('eMaquina').value=e.maquina||'';document.getElementById('ePrioridade').value=e.prioridade||'normal';document.getElementById('eStatus').value=e.status||'agendado';document.getElementById('eHoraSaida').value=e.hora_saida||'';document.getElementById('eHoraRetorno').value=e.hora_retorno||'';document.getElementById('eObs').value=e.observacoes||'';document.getElementById('mEscTitle').textContent='Editar Escala';openModal('mEscala')}
+// Duplicar: copia TODOS os dados da escala mas como NOVA (editEscId=null), com data no dia seguinte
+// e status zerado pra agendado (horas de saida/retorno limpas, pois sao do dia original).
+function duplicarEsc(id){
+  if(!isEditor)return checkEditor();
+  const e=E.find(x=>x.id===id);if(!e)return;
+  editEscId=null; // null = salva como escala NOVA
+  populateSelects();
+  // Data sugerida: dia seguinte ao da escala original (usuario pode trocar no modal)
+  let novaData=selDate;
+  try{const d=new Date((e.data||selDate)+'T12:00:00');d.setDate(d.getDate()+1);novaData=d.toISOString().slice(0,10)}catch{}
+  document.getElementById('eData').value=novaData;
+  document.getElementById('eDataFim').value=''; // nao arrasta data_fim
+  document.getElementById('eVeiculo').value=e.veiculo_id||'';
+  document.getElementById('eOperador').value=e.operador_id||'';
+  document.getElementById('eServico').value=e.servico||'';
+  document.getElementById('eDestino').value=e.destino||'';
+  document.getElementById('eEndereco').value=e.endereco||'';
+  document.getElementById('eCliente').value=e.cliente||'';
+  document.getElementById('eMaquina').value=e.maquina||'';
+  document.getElementById('ePrioridade').value=e.prioridade||'normal';
+  document.getElementById('eStatus').value='agendado'; // copia sempre comeca agendada
+  document.getElementById('eHoraSaida').value=''; // horas sao do dia original
+  document.getElementById('eHoraRetorno').value='';
+  document.getElementById('eObs').value=e.observacoes||'';
+  document.getElementById('mEscTitle').textContent='Duplicar Escala (ajuste a data)';
+  openModal('mEscala');
+  toast('Escala copiada. Confira a data e salve.');
+}
 async function saveEsc(){
   const vSel=document.getElementById('eVeiculo'),oSel=document.getElementById('eOperador');
   if(!vSel.value){toast('Selecione o veículo.','err');return}

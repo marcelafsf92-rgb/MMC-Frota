@@ -13,8 +13,6 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -234,23 +232,6 @@
       #toast{right:10px;left:10px;max-width:none;bottom:12px;font-size:13px}
     }
 
-    /* Rastreio */
-    .rastreio-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-    .rast-status{font-size:13px;font-weight:600;color:var(--navy);background:var(--glass);border:1px solid var(--glass-border);padding:8px 14px;border-radius:10px}
-    .rast-status.warn{color:#92400e;background:#fef3c7;border-color:#fde68a}
-    .rast-status.err{color:#991b1b;background:#fee2e2;border-color:#fecaca}
-    #rastMap{width:100%;height:60vh;min-height:380px;border-radius:var(--r);border:1px solid var(--glass-border);box-shadow:var(--sh-m);z-index:1}
-    .rast-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:14px}
-    .rast-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--sh-s);cursor:pointer;transition:all .15s}
-    .rast-card:hover{border-color:var(--navy);box-shadow:var(--sh-m);transform:translateY(-1px)}
-    .rast-card .rc-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-    .rast-card .rc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .rast-card .rc-nome{font-weight:700;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .rast-card .rc-meta{font-size:12px;color:var(--muted);line-height:1.5}
-    .rc-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
-    .rc-badge.mov{background:#d1fae5;color:#065f46}.rc-badge.par{background:#e5e7eb;color:#374151}
-    .marker-lbl{background:var(--navy);color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)}
-    @media(max-width:640px){#rastMap{height:52vh;min-height:300px}.rast-lista{grid-template-columns:1fr 1fr;gap:8px}.rast-card{padding:10px}}
   </style>
 </head>
 <body>
@@ -276,7 +257,7 @@
   <button class="tbtn" data-tab="veiculos">Veículos <span class="tc" id="tcV">0</span></button>
   <button class="tbtn" data-tab="operadores">Operadores <span class="tc" id="tcO">0</span></button>
   <button class="tbtn" data-tab="interna">Frota Interna <span class="tc" id="tcI">0</span></button>
-  <button class="tbtn" data-tab="rastreio">📍 Rastreio <span class="tc" id="tcR">0</span></button>
+  <button class="tbtn" data-tab="rastreio">📍 Rastreio</button>
 </div></div>
 
 <div class="dash" id="dashboard">
@@ -344,23 +325,10 @@
   <div class="vo-grid" id="iGrid"></div>
 </div></div>
 
-<!-- Tab: Rastreio -->
-<div class="tcont" id="tab-rastreio"><div class="bwrap">
-  <div class="rastreio-bar">
-    <div id="rastStatus" class="rast-status">Carregando rastreamento…</div>
-    <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
-      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="rastAuto" checked> Atualizar sozinho
-      </label>
-      <button class="date-nav-btn" id="rastReload" title="Atualizar agora" style="width:auto;padding:8px 14px;font-size:12px;font-family:'DM Sans',sans-serif;gap:6px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Atualizar
-      </button>
-    </div>
-  </div>
-  <div id="rastMap"></div>
-  <div id="rastLista" class="rast-lista"></div>
-  <p id="rastAjuda" style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6"></p>
-</div></div>
+<!-- Tab: Rastreio (embute o app compartilhado mmc-rastreio) -->
+<div class="tcont" id="tab-rastreio">
+  <iframe id="rastFrame" src="about:blank" title="Rastreio ao vivo" style="width:100%;height:calc(100vh - 160px);min-height:420px;border:0;display:block"></iframe>
+</div>
 
 <!-- Modal: Veículo Interno -->
 <div class="mbg" id="mInterna"><div class="modal">
@@ -557,7 +525,8 @@ function bgSync(){
 }
 
 // ── Tabs ──
-function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else if(t==='interna')renderInterna();else if(t==='rastreio')enterRastreio();else render();if(t!=='rastreio')stopRastreioAuto()}
+const RASTREIO_URL='https://mmc-rastreio.vercel.app';
+function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else if(t==='interna')renderInterna();else if(t==='rastreio'){const f=document.getElementById('rastFrame');if(f&&f.src==='about:blank')f.src=RASTREIO_URL}else render()}
 
 // ── Date Navigation ──
 function setDate(d){selDate=d;document.getElementById('escalaDate').value=d;document.getElementById('dateLabel').textContent=dayLabel(d);render()}
@@ -1199,77 +1168,6 @@ document.getElementById('calToday').addEventListener('click',calGoToday);
 document.querySelectorAll('.tbtn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mbg.open').forEach(m=>m.classList.remove('open'))});
-
-// ── Rastreio (mapa ao vivo FTrack via /api/rastreio) ──
-let rastMap=null,rastLayer=null,rastTimer=null,rastFirstFit=true;
-function enterRastreio(){
-  if(typeof L==='undefined'){document.getElementById('rastStatus').textContent='Carregando mapa…';setTimeout(enterRastreio,300);return}
-  if(!rastMap){
-    rastMap=L.map('rastMap',{zoomControl:true,attributionControl:true}).setView([-15.78,-47.93],4); // Brasil
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(rastMap);
-    rastLayer=L.layerGroup().addTo(rastMap);
-  }
-  setTimeout(()=>rastMap.invalidateSize(),120); // aba estava oculta
-  fetchRastreio();
-  startRastreioAuto();
-}
-function startRastreioAuto(){stopRastreioAuto();if(document.getElementById('rastAuto').checked)rastTimer=setInterval(fetchRastreio,30000)}
-function stopRastreioAuto(){if(rastTimer){clearInterval(rastTimer);rastTimer=null}}
-async function fetchRastreio(){
-  const st=document.getElementById('rastStatus');
-  try{
-    const r=await fetch('/api/rastreio',{cache:'no-store'});
-    const j=await r.json();
-    renderRastreio(j);
-  }catch(e){ st.className='rast-status err'; st.textContent='Erro ao buscar rastreamento. Tente Atualizar.'; }
-}
-function haQuanto(min){
-  if(min==null)return 'sem data';
-  if(min<0)min=0;
-  if(min<1)return 'agora';
-  if(min<60)return 'há '+min+' min';
-  const h=Math.floor(min/60);if(h<24)return 'há '+h+'h';
-  const d=Math.floor(h/24);if(d<30)return 'há '+d+' dia'+(d>1?'s':'');
-  const mes=Math.floor(d/30);return 'há '+mes+(mes>1?' meses':' mês');
-}
-function renderRastreio(j){
-  const st=document.getElementById('rastStatus'),lista=document.getElementById('rastLista'),ajuda=document.getElementById('rastAjuda');
-  document.getElementById('tcR').textContent=(j.vehicles||[]).length;
-  // estados de configuração / vazio
-  if(!j.configurada){st.className='rast-status warn';st.textContent='⚙ Integração ainda não ligada — falta configurar a chave na Vercel.';ajuda.innerHTML='Assim que a <b>ApiKey/SecretKey da conta MMC</b> forem cadastradas nas variáveis <code>FTRACK_API_KEY</code> e <code>FTRACK_SECRET_KEY</code> da Vercel, os veículos aparecem aqui automaticamente.';rastLayer&&rastLayer.clearLayers();lista.innerHTML='';return}
-  if(!j.ok){st.className='rast-status err';st.textContent='FTrack: '+(j.message||'erro');lista.innerHTML='';return}
-  const vs=j.vehicles||[];
-  if(vs.length===0){
-    st.className='rast-status warn';
-    st.textContent=j.soLista?'Frota carregada, mas sem posição ao vivo ('+(j.total||0)+' veículos).':'Nenhum veículo transmitindo posição agora'+(j.total?(' ('+j.total+' no cadastro).'):'.');
-    ajuda.innerHTML=j.total?'A conta respondeu mas sem GPS válido no momento — pode ser rastreador desligado ou a permissão de <b>telemetria/eventos</b> não estar habilitada nessa chave.':'';
-    rastLayer&&rastLayer.clearLayers();lista.innerHTML='';return;
-  }
-  st.className='rast-status';
-  const emMov=vs.filter(v=>v.velocidade>0&&!v.stale).length;
-  const desat=vs.filter(v=>v.stale).length;
-  st.textContent='🟢 '+vs.length+' veículo(s) · '+emMov+' em movimento'+(desat?(' · ⚠ '+desat+' com sinal antigo'):'')+' · '+new Date(j.atualizado).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  ajuda.innerHTML='Atualiza sozinho a cada 30s. Verde = em movimento · cinza = parado · <span style="color:#b45309">amarelo = sinal antigo (>6h)</span>. Clique num veículo pra centralizar.';
-  // cor por estado
-  const corDe=v=>v.stale?'#f59e0b':(v.velocidade>0?'#10b981':'#6b7280');
-  // marcadores
-  rastLayer.clearLayers();
-  const pts=[];
-  vs.forEach(v=>{
-    const cor=corDe(v);
-    const m=L.circleMarker([v.lat,v.lng],{radius:9,fillColor:cor,color:'#fff',weight:2,fillOpacity:v.stale?.6:.95}).addTo(rastLayer);
-    m.bindTooltip(v.placa||v.nome,{permanent:false,direction:'top',className:'marker-lbl'});
-    m.bindPopup('<b>'+esc(v.nome)+'</b><br>'+(v.placa?('Placa '+esc(v.placa)+'<br>'):'')+(v.motorista?('👤 '+esc(v.motorista)+'<br>'):'')+'🚦 '+(v.ignicao?'Ligado':'Desligado')+' · '+v.velocidade+' km/h<br>🛰 '+esc(v.dataGps||v.dataComunicacao||'')+' ('+haQuanto(v.minutosAtras)+')<br><a href="https://www.google.com/maps?q='+v.lat+','+v.lng+'" target="_blank" rel="noopener">Abrir no Google Maps</a>');
-    v._marker=m;pts.push([v.lat,v.lng]);
-  });
-  if(rastFirstFit&&pts.length){rastMap.fitBounds(pts,{padding:[40,40],maxZoom:14});rastFirstFit=false}
-  // lista lateral (frescos primeiro, desatualizados no fim)
-  const ord=vs.map((v,i)=>({v,i})).sort((a,b)=>(a.v.stale-b.v.stale)||(b.v.velocidade-a.v.velocidade));
-  lista.innerHTML=ord.map(({v,i})=>'<div class="rast-card" data-i="'+i+'"><div class="rc-top"><span class="rc-dot" style="background:'+corDe(v)+'"></span><span class="rc-nome">'+esc(v.placa||v.nome)+'</span></div><div class="rc-meta">'+esc(v.nome!==v.placa?v.nome:'')+(v.motorista?('<br>👤 '+esc(v.motorista)):'')+'<br><span class="rc-badge '+(v.stale?'par':(v.velocidade>0?'mov':'par'))+'">'+(v.stale?'sinal antigo':(v.velocidade>0?(v.velocidade+' km/h'):'parado'))+'</span> · 🛰 '+esc(haQuanto(v.minutosAtras))+'</div></div>').join('');
-  lista.querySelectorAll('.rast-card').forEach(c=>c.addEventListener('click',()=>{const v=vs[+c.dataset.i];rastMap.setView([v.lat,v.lng],16);v._marker&&v._marker.openPopup()}));
-}
-document.getElementById('rastReload').addEventListener('click',fetchRastreio);
-document.getElementById('rastAuto').addEventListener('change',startRastreioAuto);
 
 // ── PWA ──
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));

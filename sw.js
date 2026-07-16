@@ -1,7 +1,7 @@
 // MMC Frota — Service Worker
 // v2: não cacheia Supabase nem requisições não-GET (evita dados obsoletos no mobile)
 
-const CACHE_VERSION = 'mmc-frota-v2';
+const CACHE_VERSION = 'mmc-frota-v3';
 const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -21,7 +21,8 @@ self.addEventListener('fetch', e => {
     u.hostname.includes('googleusercontent.com') ||
     u.hostname.includes('brasilapi.com.br') ||
     u.hostname.includes('nominatim.openstreetmap.org') ||
-    u.hostname.includes('router.project-osrm.org')
+    u.hostname.includes('router.project-osrm.org') ||
+    u.pathname.startsWith('/api/')  // proxy de rastreamento: posição sempre fresca
   ) return;
   // Nunca cachear não-GET
   if (e.request.method !== 'GET') return;

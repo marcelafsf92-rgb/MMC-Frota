@@ -526,6 +526,11 @@ function bgSync(){
 
 // ── Tabs ──
 const RASTREIO_URL='https://mmc-rastreio.vercel.app';
+// ── Última posição (do rastreio) por item do cadastro ──
+let posByRow={};
+function haQ(min){if(min==null)return'sem sinal';if(min<0)min=0;if(min<1)return'agora';if(min<60)return'há '+min+' min';const h=Math.floor(min/60);if(h<24)return'há '+h+'h';const d=Math.floor(h/24);if(d<30)return'há '+d+'d';return'há '+Math.floor(d/30)+' meses'}
+function posBadge(tabela,id){const p=posByRow[tabela+':'+id];if(!p)return'';const cor=p.stale?'#f59e0b':(p.vel>0?'#10b981':'#6b7280');return '<div style="margin-top:8px;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">'+'<span style="display:inline-flex;align-items:center;gap:5px;color:'+cor+';font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:'+cor+'"></span>📍 '+haQ(p.min)+(p.vel>0?(' · '+p.vel+' km/h'):'')+'</span>'+'<a href="'+RASTREIO_URL+'/?focus='+encodeURIComponent(id)+'" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;font-weight:600">ver no mapa →</a></div>'}
+async function loadPos(){try{const j=await(await fetch(RASTREIO_URL+'/api/rastreio')).json();const m={};(j.vehicles||[]).forEach(v=>{if(v.vinculado&&v.vinculo&&v.vinculo.id)m[v.vinculo.tabela+':'+v.vinculo.id]={lat:v.lat,lng:v.lng,min:v.minutosAtras,stale:v.stale,vel:v.velocidade}});posByRow=m;render();if(curTab==='interna')renderInterna()}catch(e){}}
 function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else if(t==='interna')renderInterna();else if(t==='rastreio'){const f=document.getElementById('rastFrame');if(f&&f.src==='about:blank')f.src=RASTREIO_URL}else render()}
 
 // ── Date Navigation ──
@@ -604,6 +609,7 @@ function render(){
       +'<span class="vo-badge '+badge+'">'+esc(badge.replace('_',' '))+'</span></div>'
       +'<div class="vo-info"><label>Modelo</label><span>'+esc(v.modelo||'—')+'</span>'
       +'<label>Placa</label><span>'+esc(v.placa||'—')+'</span></div>'
+      +posBadge('frota_veiculos',v.id)
       +(v.observacoes?'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+esc(v.observacoes)+'</div>':'')
       +'<div class="vo-acts">'
       +'<button class="vbtn" onclick="editVeic(\''+esc(v.id)+'\')">Editar</button>'
@@ -1026,6 +1032,7 @@ function renderInterna(){
       +(v.responsavel?'<label>Usando</label><span>'+esc(v.responsavel)+'</span>':'')
       +(v.km_atual?'<label>KM</label><span>'+esc(v.km_atual)+'</span>':'')
       +'</div>'
+      +posBadge('frota_interna',v.id)
       +(v.observacoes?'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+esc(v.observacoes)+'</div>':'')
       +'<div class="vo-acts">'
       +'<button class="vbtn" onclick="editInterna(\''+esc(v.id)+'\')">Editar</button>'
@@ -1177,6 +1184,7 @@ if(new URLSearchParams(window.location.search).get('auth')===EDIT_PASS){isEditor
 applyMode();
 setDate(today());
 loadAll();
+loadPos(); setInterval(loadPos,60000);
 </script>
 </body>
 </html>

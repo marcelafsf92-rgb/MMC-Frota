@@ -354,6 +354,7 @@
       <div class="fg"><label>Data Início</label><input id="eData" type="date"></div>
       <div class="fg"><label>Data Fim (opcional)</label><input id="eDataFim" type="date"></div>
     </div>
+    <div id="eDataHint" style="font-size:11px;color:var(--muted);margin:-6px 0 4px;display:none">💡 Preenchendo a Data Fim, será criada <b>uma escala por dia</b> (todas iguais). Depois você pode trocar o operador de um dia específico sem afetar os outros.</div>
     <div class="frow">
       <div class="fg"><label>Veículo</label><select id="eVeiculo"></select></div>
       <div class="fg"><label>Operador</label><select id="eOperador"></select></div>
@@ -467,7 +468,7 @@ let lt=null;
 function setLoading(on){const b=document.getElementById('loadBar'),s=document.getElementById('spin');if(on){b.className='on';s.className='on'}else{b.className='done';s.className='';clearTimeout(lt);lt=setTimeout(()=>b.className='',400)}}
 function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;e.className='show '+t;setTimeout(()=>e.classList.remove('show'),3400)}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
-function openModal(id){document.getElementById(id).classList.add('open')}
+function openModal(id){document.getElementById(id).classList.add('open');if(id==='mEscala'&&typeof atualizaDataHint==='function')atualizaDataHint()}
 
 // ── Editor ──
 function checkEditor(){if(isEditor)return true;const p=prompt('Senha de edição:');if(p===EDIT_PASS){isEditor=true;sessionStorage.setItem('mmc_frota_editor','true');applyMode();toast('Modo editor ativado!');return true}toast('Senha incorreta.','err');return false}
@@ -692,10 +693,38 @@ async function saveEsc(){
   const enderecoRaw=document.getElementById('eEndereco').value.trim();
   const enderecoIsUrl=/^https?:\/\//i.test(enderecoRaw);
   const endereco=enderecoIsUrl?enderecoRaw:enderecoRaw.toUpperCase();
-  const d={id:editEscId||uid(),data:document.getElementById('eData').value,data_fim:document.getElementById('eDataFim').value||'',veiculo_id:vSel.value,veiculo_nome:vSel.options[vSel.selectedIndex].dataset.name||'',operador_id:oSel.value||'',operador_nome:oSel.value?oSel.options[oSel.selectedIndex].dataset.name:'',servico:document.getElementById('eServico').value,destino:destino,endereco:endereco,cliente:document.getElementById('eCliente').value.toUpperCase(),maquina:document.getElementById('eMaquina').value.toUpperCase(),prioridade:document.getElementById('ePrioridade').value,status:document.getElementById('eStatus').value,hora_saida:document.getElementById('eHoraSaida').value,hora_retorno:document.getElementById('eHoraRetorno').value,observacoes:document.getElementById('eObs').value.toUpperCase()};
+  const dataIni=document.getElementById('eData').value;
+  const dataFim=document.getElementById('eDataFim').value||'';
+  // Campos comuns a todos os dias (sem id/data — definidos por dia abaixo)
+  const base={veiculo_id:vSel.value,veiculo_nome:vSel.options[vSel.selectedIndex].dataset.name||'',operador_id:oSel.value||'',operador_nome:oSel.value?oSel.options[oSel.selectedIndex].dataset.name:'',servico:document.getElementById('eServico').value,destino:destino,endereco:endereco,cliente:document.getElementById('eCliente').value.toUpperCase(),maquina:document.getElementById('eMaquina').value.toUpperCase(),prioridade:document.getElementById('ePrioridade').value,status:document.getElementById('eStatus').value,hora_saida:document.getElementById('eHoraSaida').value,hora_retorno:document.getElementById('eHoraRetorno').value,observacoes:document.getElementById('eObs').value.toUpperCase()};
   const eid=editEscId;closeModal('mEscala');
-  const idx=E.findIndex(x=>x.id===d.id);if(idx>=0)E[idx]=d;else E.push(d);localSave();render();toast(eid?'Escala atualizada!':'Escala criada!');
-  try{await api({action:eid?'frota_updEscala':'frota_addEscala',item:d});bgSync()}catch{toast('Erro ao salvar.','err')}
+
+  // EDIÇÃO: sempre 1 registro só (o campo data_fim vira '' — bloco antigo deixa de existir)
+  if(eid){
+    const d={id:eid,data:dataIni,data_fim:'',...base};
+    const idx=E.findIndex(x=>x.id===eid);if(idx>=0)E[idx]=d;else E.push(d);
+    localSave();render();toast('Escala atualizada!');
+    try{await api({action:'frota_updEscala',item:d});bgSync()}catch{toast('Erro ao salvar.','err')}
+    return;
+  }
+
+  // CRIAÇÃO: se tem intervalo (data_fim > data), gera 1 escala POR DIA (todas iguais).
+  // Cada dia fica independente — depois dá pra trocar o operador de um dia sem mexer nos outros.
+  const dias=[];
+  if(dataFim && dataFim>dataIni){
+    let cur=new Date(dataIni+'T12:00:00'), fim=new Date(dataFim+'T12:00:00');
+    while(cur<=fim){ dias.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+1); }
+  } else {
+    dias.push(dataIni);
+  }
+  const novos=dias.map(dt=>({id:uid(),data:dt,data_fim:'',...base}));
+  novos.forEach(d=>E.push(d));
+  localSave();render();
+  toast(novos.length>1?novos.length+' escalas criadas (uma por dia)':'Escala criada!');
+  try{
+    for(const d of novos){ await api({action:'frota_addEscala',item:d}); }
+    bgSync();
+  }catch{toast('Erro ao salvar alguma escala.','err')}
 }
 async function advanceEsc(id,newStatus){
   const e=E.find(x=>x.id===id);if(!e)return;
@@ -1094,6 +1123,14 @@ document.getElementById('btnAddO').addEventListener('click',openAddOper);
 document.getElementById('eSave').addEventListener('click',saveEsc);
 document.getElementById('eServico').addEventListener('change',toggleMaquina);
 document.getElementById('eVeiculo').addEventListener('change',toggleMaquina);
+// Dica "uma escala por dia" aparece quando Data Fim > Data Início (só na criação)
+function atualizaDataHint(){
+  const hint=document.getElementById('eDataHint');if(!hint)return;
+  const ini=document.getElementById('eData').value, fim=document.getElementById('eDataFim').value;
+  hint.style.display=(!editEscId && fim && ini && fim>ini)?'block':'none';
+}
+document.getElementById('eData').addEventListener('change',atualizaDataHint);
+document.getElementById('eDataFim').addEventListener('change',atualizaDataHint);
 function toggleMaquina(){
   const vId=document.getElementById('eVeiculo').value;
   const veic=V.find(v=>v.id===vId);

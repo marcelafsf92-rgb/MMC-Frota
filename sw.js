@@ -1,7 +1,7 @@
 // MMC Frota — Service Worker
 // v2: não cacheia Supabase nem requisições não-GET (evita dados obsoletos no mobile)
 
-const CACHE_VERSION = 'mmc-frota-v3';
+const CACHE_VERSION = 'mmc-frota-v4';
 const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {

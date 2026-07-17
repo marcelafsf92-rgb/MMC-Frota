@@ -1182,7 +1182,11 @@ document.getElementById('mapBg').addEventListener('click',e=>{if(e.target.id==='
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mapBg').classList.contains('open'))fecharMapa()});
 
 // ── PWA ──
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator){
+  let swRefreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(swRefreshing)return;swRefreshing=true;location.reload()});
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>{r.update&&r.update()}).catch(()=>{}));
+}
 
 // ── Init ──
 if(new URLSearchParams(window.location.search).get('auth')===EDIT_PASS){isEditor=true;sessionStorage.setItem('mmc_frota_editor','true')}

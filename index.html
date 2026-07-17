@@ -231,7 +231,12 @@
       .fg select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
       #toast{right:10px;left:10px;max-width:none;bottom:12px;font-size:13px}
     }
-
+    .mapbg{position:fixed;inset:0;background:rgba(15,23,42,.7);backdrop-filter:blur(3px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .2s}
+    .mapbg.open{opacity:1;pointer-events:all}
+    .mapbox{position:relative;width:min(1120px,96vw);height:min(82vh,900px);background:#0f1b3d;border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+    .mapbox iframe{width:100%;height:100%;border:0;display:block}
+    .mapx{position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .mapx svg{width:18px;height:18px}.mapx:hover{background:rgba(0,0,0,.8)}
   </style>
 </head>
 <body>
@@ -256,9 +261,7 @@
   <button class="tbtn" data-tab="calendario">Calendário</button>
   <button class="tbtn" data-tab="veiculos">Veículos <span class="tc" id="tcV">0</span></button>
   <button class="tbtn" data-tab="operadores">Operadores <span class="tc" id="tcO">0</span></button>
-  <button class="tbtn" data-tab="interna">Frota Interna <span class="tc" id="tcI">0</span></button>
-  <button class="tbtn" data-tab="rastreio">📍 Rastreio</button>
-</div></div>
+  <button class="tbtn" data-tab="interna">Frota Interna <span class="tc" id="tcI">0</span></button></div></div>
 
 <div class="dash" id="dashboard">
   <div class="dash-card"><div class="dash-icon" style="background:#dbeafe;color:#1e40af"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div><div><div class="dash-val" id="dVeic">0</div><div class="dash-lbl">Veículos</div></div></div>
@@ -325,10 +328,8 @@
   <div class="vo-grid" id="iGrid"></div>
 </div></div>
 
-<!-- Tab: Rastreio (embute o app compartilhado mmc-rastreio) -->
-<div class="tcont" id="tab-rastreio">
-  <iframe id="rastFrame" src="about:blank" title="Rastreio ao vivo" style="width:100%;height:calc(100vh - 160px);min-height:420px;border:0;display:block"></iframe>
-</div>
+<!-- Overlay do mapa (ver no mapa sem sair da página) -->
+<div class="mapbg" id="mapBg"><div class="mapbox"><button class="mapx" onclick="fecharMapa()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button><iframe id="mapFrame" src="about:blank" title="Rastreio no mapa"></iframe></div></div>
 
 <!-- Modal: Veículo Interno -->
 <div class="mbg" id="mInterna"><div class="modal">
@@ -529,9 +530,11 @@ const RASTREIO_URL='https://mmc-rastreio.vercel.app';
 // ── Última posição (do rastreio) por item do cadastro ──
 let posByRow={};
 function haQ(min){if(min==null)return'sem sinal';if(min<0)min=0;if(min<1)return'agora';if(min<60)return'há '+min+' min';const h=Math.floor(min/60);if(h<24)return'há '+h+'h';const d=Math.floor(h/24);if(d<30)return'há '+d+'d';return'há '+Math.floor(d/30)+' meses'}
-function posBadge(tabela,id){const p=posByRow[tabela+':'+id];if(!p)return'';const cor=p.stale?'#f59e0b':(p.vel>0?'#10b981':'#6b7280');return '<div style="margin-top:8px;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">'+'<span style="display:inline-flex;align-items:center;gap:5px;color:'+cor+';font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:'+cor+'"></span>📍 '+haQ(p.min)+(p.vel>0?(' · '+p.vel+' km/h'):'')+'</span>'+'<a href="'+RASTREIO_URL+'/?focus='+encodeURIComponent(id)+'" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;font-weight:600">ver no mapa →</a></div>'}
+function posBadge(tabela,id){const p=posByRow[tabela+':'+id];if(!p)return'';const cor=p.stale?'#f59e0b':(p.vel>0?'#10b981':'#6b7280');return '<div style="margin-top:8px;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">'+'<span style="display:inline-flex;align-items:center;gap:5px;color:'+cor+';font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:'+cor+'"></span>📍 '+haQ(p.min)+(p.vel>0?(' · '+p.vel+' km/h'):'')+'</span>'+'<a href="javascript:void(0)" onclick="verNoMapa(\''+esc(id)+'\')" style="color:var(--navy);text-decoration:none;font-weight:600;cursor:pointer">ver no mapa →</a></div>'}
+function verNoMapa(id){const f=document.getElementById('mapFrame');f.src=RASTREIO_URL+'/?focus='+encodeURIComponent(id);document.getElementById('mapBg').classList.add('open')}
+function fecharMapa(){document.getElementById('mapBg').classList.remove('open');const f=document.getElementById('mapFrame');setTimeout(()=>{if(!document.getElementById('mapBg').classList.contains('open'))f.src='about:blank'},250)}
 async function loadPos(){try{const j=await(await fetch(RASTREIO_URL+'/api/rastreio')).json();const m={};(j.vehicles||[]).forEach(v=>{if(v.vinculado&&v.vinculo&&v.vinculo.id)m[v.vinculo.tabela+':'+v.vinculo.id]={lat:v.lat,lng:v.lng,min:v.minutosAtras,stale:v.stale,vel:v.velocidade}});posByRow=m;render();if(curTab==='interna')renderInterna()}catch(e){}}
-function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else if(t==='interna')renderInterna();else if(t==='rastreio'){const f=document.getElementById('rastFrame');if(f&&f.src==='about:blank')f.src=RASTREIO_URL}else render()}
+function switchTab(t){curTab=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tcont').forEach(c=>c.classList.toggle('active',c.id==='tab-'+t));if(t==='calendario')renderCal();else if(t==='interna')renderInterna();else render()}
 
 // ── Date Navigation ──
 function setDate(d){selDate=d;document.getElementById('escalaDate').value=d;document.getElementById('dateLabel').textContent=dayLabel(d);render()}
@@ -1175,6 +1178,8 @@ document.getElementById('calToday').addEventListener('click',calGoToday);
 document.querySelectorAll('.tbtn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mbg.open').forEach(m=>m.classList.remove('open'))});
+document.getElementById('mapBg').addEventListener('click',e=>{if(e.target.id==='mapBg')fecharMapa()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mapBg').classList.contains('open'))fecharMapa()});
 
 // ── PWA ──
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));

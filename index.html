@@ -180,7 +180,7 @@
     .mtitle{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:var(--navy)}
     .mx{width:32px;height:32px;border:none;background:rgba(0,0,0,.05);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .15s}
     .mx:hover{background:rgba(0,0,0,.1)}.mx svg{width:15px;height:15px}
-    .mbd{padding:18px 24px;display:grid;gap:14px;flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    .mbd{padding:18px 24px;display:grid;gap:14px;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
     .frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .fg{display:flex;flex-direction:column;gap:5px}
     .fg label{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
@@ -218,10 +218,16 @@
       .vo-card{padding:12px}.vo-name{font-size:16px}
       .date-nav{gap:8px}.date-label{font-size:16px}
       /* MODAL MOBILE */
-      .mbg{padding:0;align-items:flex-end;justify-content:stretch}
+      /* Sem blur no celular: backdrop-filter num container com area rolavel trava o
+         scroll interno no iOS. O fundo ja e praticamente opaco, entao o visual nao muda. */
+      .mbg{padding:0;align-items:flex-end;justify-content:stretch;
+        background:rgba(15,23,42,.55);backdrop-filter:none;-webkit-backdrop-filter:none}
       .modal{width:100%!important;max-width:100%!important;border-radius:18px 18px 0 0;margin:0;max-height:92vh;
         transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.23,1);
-        left:0;right:0;overflow-x:hidden}
+        left:0;right:0;overflow-x:hidden;
+        background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+      .mhd{background:#fff}
+      .mft{background:#fff}
       .mbg.open .modal{transform:translateY(0)}
       .mhd{padding:16px 16px 0;border-radius:18px 18px 0 0}
       .mbd{padding:14px 16px;gap:12px}

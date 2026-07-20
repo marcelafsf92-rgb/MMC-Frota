@@ -174,7 +174,7 @@
     /* Modals */
     .mbg{position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
     .mbg.open{opacity:1;pointer-events:all}
-    .modal{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;width:100%;max-width:640px;border:1px solid rgba(255,255,255,.5);box-shadow:0 28px 90px rgba(0,0,0,.2);transform:scale(.95) translateY(10px);transition:transform .22s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+    .modal{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:20px;width:100%;max-width:640px;border:1px solid rgba(255,255,255,.5);box-shadow:0 28px 90px rgba(0,0,0,.2);transform:scale(.95) translateY(10px);transition:transform .22s cubic-bezier(.34,1.56,.64,1);max-height:100%;overflow:hidden;display:flex;flex-direction:column}
     .mbg.open .modal{transform:scale(1) translateY(0)}
     .mhd{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;background:rgba(255,255,255,.9);border-radius:20px 20px 0 0;z-index:1}
     .mtitle{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:var(--navy)}
@@ -222,7 +222,10 @@
          scroll interno no iOS. O fundo ja e praticamente opaco, entao o visual nao muda. */
       .mbg{padding:0;align-items:flex-end;justify-content:stretch;
         background:rgba(15,23,42,.55);backdrop-filter:none;-webkit-backdrop-filter:none}
-      .modal{width:100%!important;max-width:100%!important;border-radius:18px 18px 0 0;margin:0;max-height:92vh;
+      /* max-height em % do .mbg (que e fixed inset:0 = area realmente visivel).
+         Com vh o iOS mede o viewport sem a barra de endereco, o modal fica mais alto
+         que a tela, o miolo nunca transborda e a rolagem morre. */
+      .modal{width:100%!important;max-width:100%!important;border-radius:18px 18px 0 0;margin:0;max-height:calc(100% - 20px);
         transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.23,1);
         left:0;right:0;overflow-x:hidden;
         background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}

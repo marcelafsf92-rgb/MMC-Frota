@@ -449,6 +449,50 @@
 </div></div>
 
 <script>
+/* ===== DIAGNOSTICO TEMPORARIO v8-diag (remover depois de achar a causa) =====
+   Mostra na tela qualquer erro de JS (barra vermelha) e um selo de versao no
+   canto. Serve pra descobrir por que "nada acontece" ao clicar Salvar. */
+window.__diag={v:'v8-diag',errs:[]};
+function __diagBar(txt,cor){
+  try{
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483647;background:'+cor+';color:#fff;font:12px/1.45 monospace;padding:11px 12px;white-space:pre-wrap;max-height:48vh;overflow:auto;box-shadow:0 -4px 22px rgba(0,0,0,.45)';
+    b.textContent=txt;
+    b.addEventListener('click',function(){b.remove()});
+    (document.body||document.documentElement).appendChild(b);
+  }catch(_){}
+}
+window.addEventListener('error',function(e){
+  var m='⚠ ERRO JS (toque pra fechar):\n'+((e&&e.message)||(e&&e.error)||'?')+'\n@ '+String((e&&e.filename)||'').split('/').pop()+':'+((e&&e.lineno)||'?');
+  window.__diag.errs.push(m); __diagBar(m,'#dc2626');
+});
+window.addEventListener('unhandledrejection',function(e){
+  var r=e&&e.reason; var m='⚠ PROMISE REJEITADA (toque pra fechar):\n'+((r&&r.message)||r||'?');
+  window.__diag.errs.push(m); __diagBar(m,'#b45309');
+});
+window.addEventListener('load',function(){setTimeout(function(){
+  try{
+    var badge=document.createElement('div');
+    badge.style.cssText='position:fixed;bottom:6px;right:6px;z-index:2147483646;background:#0f172a;color:#4ade80;font:11px monospace;padding:5px 8px;border-radius:7px;opacity:.9';
+    badge.textContent='v8-diag ✓ toque';
+    badge.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var sv=document.getElementById('eSave');
+      var info='DIAGNOSTICO v8-diag\n'
+        +'eSave existe: '+(!!sv)+'\n'
+        +'handler do Salvar ligado: '+(!!window.__eSaveBound)+'\n'
+        +'escalas carregadas: '+(typeof E!=='undefined'?E.length:'?')+'\n'
+        +'veiculos: '+(typeof V!=='undefined'?V.length:'?')+'\n'
+        +'data selecionada: '+(typeof selDate!=='undefined'?selDate:'?')+'\n'
+        +'erros capturados: '+window.__diag.errs.length+'\n'
+        +(window.__diag.errs.join('\n---\n')||'(nenhum erro ate agora)');
+      __diagBar(info,'#0f172a');
+    });
+    document.body.appendChild(badge);
+  }catch(_){}
+},1500)});
+/* ===== fim diagnostico ===== */
+
 // ── Config ──
 const SUPA_URL='https://yxibxbeoeqcqcqpfensv.supabase.co';
 const SUPA_KEY='sb_publishable_UOmrmMH79geJ-ITCNGV1-w_2ShPS_yn';
@@ -1151,7 +1195,7 @@ document.getElementById('refreshBtn').addEventListener('click',()=>{localStorage
 document.getElementById('btnAdd').addEventListener('click',openAddEsc);
 document.getElementById('btnAddV').addEventListener('click',openAddVeic);
 document.getElementById('btnAddO').addEventListener('click',openAddOper);
-document.getElementById('eSave').addEventListener('click',saveEsc);
+document.getElementById('eSave').addEventListener('click',saveEsc);window.__eSaveBound=true;
 document.getElementById('eServico').addEventListener('change',toggleMaquina);
 document.getElementById('eVeiculo').addEventListener('change',toggleMaquina);
 // Dica "uma escala por dia" aparece quando Data Fim > Data Início (só na criação)
